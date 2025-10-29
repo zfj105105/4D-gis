@@ -10,7 +10,6 @@ export default function App() {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        // 1. 标记我们现在在客户端
         setIsClient(true);
 
         // 2. 开始GPS逻辑
@@ -30,7 +29,7 @@ export default function App() {
                 });
             },
             (error) => {
-                let msg = '';
+                let msg: string;
                 switch (error.code) {
                     case error.PERMISSION_DENIED: msg = '用户拒绝了位置请求。'; break;
                     case error.POSITION_UNAVAILABLE: msg = '位置信息不可用。'; break;

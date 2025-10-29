@@ -12,9 +12,7 @@ const osmRasterStyle = {
         'osm-raster-tiles': { // Source ID
             type: 'raster',
             tiles: [
-                'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+                'https://xyz.sayaz.site/tile/{z}/{x}/{y}.png'
             ],
             tileSize: 256,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
