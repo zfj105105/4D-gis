@@ -1,5 +1,5 @@
 // MapLibre
-export const osmRasterStyleViaProxy = {
+export const osmStyle = {
     version: 8,
     sources: {
         'osm-raster-tiles-proxy': {
@@ -22,19 +22,18 @@ export const osmRasterStyleViaProxy = {
     ]
 };
 
-export const offlineMapStyle = {
+export const offlineStyle = {
     version: 8,
-    sources: {},
-    layers: [
-        {
-            id: 'background',
-            type: 'background',
-            paint: {
-                'background-color': '#f0f0f0' // A light gray background
-            }
+    "sprite": "asset://styles/sprite",
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            // 关键：URL 指向您在 App 中打包的 mbtiles 文件
+            "url": "mbtiles://tile/china-vector.mbtiles"
         }
-    ]
+    },
 };
+
 
 // React Leaflet
 export const osmTileUrlProxy = 'https://xyz.sayaz.site/tile/{z}/{x}/{y}.png';
