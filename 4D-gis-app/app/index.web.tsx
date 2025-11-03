@@ -1,63 +1,46 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
+import { useUserLocation } from '@/hooks/useUserLocation.web';
+import {LocationInfoBox} from "@/components/map/LocationInfoBox";
 
-const ClientOnlyWebMap = lazy(() => import('../components/ClientOnlyWebMap'));
-
-type LocationState = { lat: number; lng: number; alt: number | null; }
+const CustomMapView = lazy(() => import('../components/map/CustomMapView.web'));
 
 export default function App() {
-    const [location, setLocation] = useState<LocationState | null>(null);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const [isClient, setIsClient] = useState(false);
+    const { location, errorMsg, isLoading } = useUserLocation();
 
-    useEffect(() => {
-        setIsClient(true);
-
-        // 2. 开始GPS逻辑
-        if (!navigator.geolocation) {
-            setErrorMsg('抱歉，您的浏览器不支持GPS地理定位。');
-            return;
-        }
-
-        console.log('正在请求位置权限...');
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude, altitude } = position.coords;
-                setLocation({
-                    lat: latitude,
-                    lng: longitude,
-                    alt: altitude,
-                });
-            },
-            (error) => {
-                let msg: string;
-                switch (error.code) {
-                    case error.PERMISSION_DENIED: msg = '用户拒绝了位置请求。'; break;
-                    case error.POSITION_UNAVAILABLE: msg = '位置信息不可用。'; break;
-                    case error.TIMEOUT: msg = '获取位置信息超时。'; break;
-                    default: msg = '获取位置时发生未知错误。'; break;
-                }
-                setErrorMsg(msg);
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    // 加载状态
+    if (isLoading) {
+        return (
+            <div style={styles.container}>
+                <p style={styles.text}>正在获取您的GPS位置...</p>
+            </div>
         );
-    }, []);
-
-    if (!isClient) {
-        return <div style={styles.container}><p>Loading Map...</p></div>;
     }
 
     if (errorMsg) {
-        return <div style={styles.container}><p style={styles.errorText}>{errorMsg}</p></div>;
+        return (
+            <div style={styles.container}>
+                <p style={styles.errorText}>{errorMsg}</p>
+            </div>
+        );
     }
 
-    if (!location) {
-        return <div style={styles.container}><p>正在获取您的GPS位置...</p></div>;
+    if (location) {
+        return (
+            <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+                <Suspense fallback={<div style={styles.container}>
+                    <p style={styles.text}>Loading Map Component...</p>
+                </div>}>
+                    <CustomMapView location={location}/>
+                </Suspense>
+                <LocationInfoBox location={location}/>
+            </div>
+        );
     }
 
     return (
-        <Suspense fallback={<div style={styles.container}><p>Loading Map Component...</p></div>}>
-            <ClientOnlyWebMap location={location} />
-        </Suspense>
+        <div style={styles.container}>
+            <p style={styles.text}>正在初始化...</p>
+        </div>
     );
 }
 
@@ -69,6 +52,11 @@ const styles: { [key: string]: React.CSSProperties } = {
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
+        fontFamily: 'sans-serif',
+    },
+    text: {
+        fontSize: '16px',
+        textAlign: 'center',
     },
     errorText: {
         color: 'red',
