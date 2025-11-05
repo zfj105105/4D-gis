@@ -6,7 +6,6 @@ import { LocationInfoBox } from '@/components/map/LocationInfoBox';
 import { CustomMapView } from '@/components/map/CustomMapView.native';
 
 export default function App() {
-
     const { location, errorMsg, isLoading } = useUserLocation();
 
     if (errorMsg) {

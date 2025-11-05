@@ -1,19 +1,17 @@
-import { View, StyleSheet} from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Camera, MapView, UserLocation, PointAnnotation, Callout } from '@maplibre/maplibre-react-native';
 import { LocationObject } from 'expo-location';
-import {offlineStyle, osmStyle} from '@/constants/MapStyle'; // 导入样式
+import { getOfflineStyle } from '@/constants/MapStyle';
 
 
 const DEFAULT_MAP_CENTER = [116.404, 39.915];
 const DEFAULT_MAP_ZOOM = 10;
 
 export const CustomMapView = ({ location }: { location: LocationObject | null }) => {
-
-
     return (
         <MapView
             style={styles.map}
-            mapStyle={offlineStyle}
+            mapStyle={getOfflineStyle()}
             logoEnabled={false}
             attributionEnabled={true}
             attributionPosition={{ bottom: 8, right: 8 }}

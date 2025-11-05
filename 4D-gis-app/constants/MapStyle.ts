@@ -22,17 +22,9 @@ export const osmStyle = {
     ]
 };
 
-export const offlineStyle = {
-    version: 8,
-    "sprite": "asset://styles/sprite",
-    "sources": {
-        "openmaptiles": {
-            "type": "vector",
-            // 关键：URL 指向您在 App 中打包的 mbtiles 文件
-            "url": "mbtiles://tile/china-vector.mbtiles"
-        }
-    },
-};
+export const getOfflineStyle = () => ({
+    ...require('@/assets/styles/style-local.json'),
+});
 
 
 // React Leaflet
