@@ -1,17 +1,19 @@
 import { View, StyleSheet } from 'react-native';
-import { Camera, MapView, UserLocation, PointAnnotation, Callout } from '@maplibre/maplibre-react-native';
-import { LocationObject } from 'expo-location';
-import { getOfflineStyle } from '@/constants/MapStyle';
+import { Camera, MapView, UserLocation, Callout } from '@maplibre/maplibre-react-native';
+import { getStyle } from '@/constants/MapStyle';
+import {useUserLocation} from "@/hooks/useUserLocation.native";
 
 
 const DEFAULT_MAP_CENTER = [116.404, 39.915];
 const DEFAULT_MAP_ZOOM = 10;
 
-export const CustomMapView = ({ location }: { location: LocationObject | null }) => {
+export const CustomMapView = () => {
+    const location = useUserLocation();
+
     return (
         <MapView
             style={styles.map}
-            mapStyle={getOfflineStyle()}
+            mapStyle={getStyle()}
             logoEnabled={false}
             attributionEnabled={true}
             attributionPosition={{ bottom: 8, right: 8 }}
@@ -22,21 +24,7 @@ export const CustomMapView = ({ location }: { location: LocationObject | null })
                     zoomLevel: DEFAULT_MAP_ZOOM,
                 }}
             />
-            <UserLocation visible={true} showsUserHeadingIndicator={true} />
-
-            {location && (
-                <PointAnnotation
-                    id="currentLocationMarker"
-                    coordinate={[location.coords.longitude, location.coords.latitude]}
-                >
-                    <View style={styles.markerContainer}>
-                        <View style={styles.markerDot} />
-                    </View>
-                    <Callout
-                        title={`高度: ${location.coords.altitude ? location.coords.altitude.toFixed(2) : 'N/A'} 米`}
-                    />
-                </PointAnnotation>
-            )}
+            <UserLocation visible={!!location} showsUserHeadingIndicator={true} />
         </MapView>
     );
 };

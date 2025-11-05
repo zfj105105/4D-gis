@@ -51,6 +51,14 @@
       "tiles": ["asset://tile/{z}/{x}/{y}.pbf"],
       "maxzoom": 14,
       "minzoom": 0
+    },
+    "osm-raster-tiles-proxy": {
+      "type": "raster",
+      "tiles": [
+        "https://xyz.sayaz.site/tile/{z}/{x}/{y}.png"
+      ],
+      "tileSize": 256,
+      "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors via Proxy",
     }
   },
   "sprite": "asset://styles/sprite",
@@ -6105,6 +6113,13 @@
         "text-halo-color": "rgba(255,255,255,0.8)",
         "text-halo-width": 2
       }
+    },
+    {
+      "id": "osm-raster-layer-proxy",
+      "type": "raster",
+      "source": "osm-raster-tiles-proxy",
+      "minzoom": 0,
+      "maxzoom": 19
     }
   ]
 }

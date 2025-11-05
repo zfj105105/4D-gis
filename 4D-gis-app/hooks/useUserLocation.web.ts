@@ -1,21 +1,8 @@
 import { useState, useEffect } from 'react';
-
-// 导出一个可复用的类型
-export interface CompatibleLocationObject {
-    coords: {
-        latitude: number;
-        longitude: number;
-        altitude: number | null;
-        accuracy: number | null;
-        altitudeAccuracy: number | null;
-        heading: number | null;
-        speed: number | null;
-    };
-    timestamp: number;
-}
+import {LocationData} from "@/types/location";
 
 export function useUserLocation() {
-    const [location, setLocation] = useState<CompatibleLocationObject | null>(null);
+    const [location, setLocation] = useState<LocationData | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -52,7 +39,6 @@ export function useUserLocation() {
                     case error.PERMISSION_DENIED:
                         msg = '用户拒绝了位置请求。请检查浏览器站点设置 (必须为 HTTPS)。';
                         break;
-                    // ... (其他错误处理)
                 }
                 setErrorMsg(msg);
                 setIsLoading(false);

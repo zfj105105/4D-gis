@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { useUserLocation } from '@/hooks/useUserLocation.web';
 import {LocationInfoBox} from "@/components/map/LocationInfoBox";
+import {ToastContainer} from "react-toastify";
 
 const CustomMapView = lazy(() => import('../components/map/CustomMapView.web'));
 
@@ -27,10 +28,11 @@ export default function App() {
     if (location) {
         return (
             <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+                <ToastContainer position="top-center" autoClose={5000} hideProgressBar={false} />
                 <Suspense fallback={<div style={styles.container}>
                     <p style={styles.text}>Loading Map Component...</p>
                 </div>}>
-                    <CustomMapView location={location}/>
+                    <CustomMapView {...location}/>
                 </Suspense>
                 <LocationInfoBox location={location}/>
             </div>

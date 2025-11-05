@@ -2,7 +2,8 @@ import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LatLngExpression } from 'leaflet';
-import { CompatibleLocationObject } from '@/hooks/useUserLocation.web';
+import {LocationData} from "@/types/location";
+import {osmAttributionProxy, osmTileUrlProxy} from "@/constants/MapStyle";
 
 
 function ChangeMapView({ center }: { center: LatLngExpression }) {
@@ -11,12 +12,7 @@ function ChangeMapView({ center }: { center: LatLngExpression }) {
     return null;
 }
 
-
-type MyMapViewProps = {
-    location: CompatibleLocationObject;
-}
-
-export default function MyMapView({ location }: MyMapViewProps) {
+export default function CustomMapView(location: LocationData) {
     const position: LatLngExpression = [location.coords.latitude, location.coords.longitude];
     const altitude = location.coords.altitude;
 
@@ -24,8 +20,8 @@ export default function MyMapView({ location }: MyMapViewProps) {
         <div style={styles.container}>
             <MapContainer center={position} zoom={15} style={styles.map}>
                 <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    url="https://xyz.sayaz.site/tile/{z}/{x}/{y}.png"
+                    attribution={osmAttributionProxy}
+                    url={osmTileUrlProxy}
                 />
                 <Marker position={position}>
                     <Popup>
