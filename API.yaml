@@ -1,32 +1,30 @@
-openapi: 3.0.0
+openapi: 3.0.1
 info:
   title: 4D GIS 标记系统 API
   description: 4D GIS 标记系统的 API 文档，用于管理具有时间（第4维）和高度的地理空间标记点。
   version: 1.0.0
-servers:
-  - url: https://api.?????????.com/api/v1
-    description: 生产环境服务器
-
-# 1. 定义安全方案 (Bearer Token)
-security:
-  - bearerAuth: []
-
-# 2. 路径 (API 端点)
+tags:
+  - name: 认证
+  - name: 标记点
+  - name: 标记类型
 paths:
   /auth/register:
     post:
-      tags:
-        - 认证 (Authentication)
       summary: 用户注册
+      deprecated: false
+      description: ''
+      tags:
+        - 认证
+      parameters: []
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/RegisterRequest'
+            example: ''
       responses:
-        '201':
-          description: 注册成功
+        '200':
+          description: ''
           content:
             application/json:
               schema:
@@ -34,78 +32,96 @@ paths:
                 properties:
                   userId:
                     type: string
-                    example: "uuid-user-123"
+                    example: uuid-user-123
                   message:
                     type: string
-                    example: "注册成功"
+                    example: 注册成功
+          headers: {}
         '400':
-          description: "无效请求（例如：用户已存在）"
-
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+          headers: {}
+      security: []
   /auth/login:
     post:
-      tags:
-        - 认证 (Authentication)
       summary: 用户登录
+      deprecated: false
+      description: ''
+      tags:
+        - 认证
+      parameters: []
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
+            example:
+              identity: '100'
+              password: Excepteur enim sed
       responses:
         '200':
-          description: 登录成功，返回 Token
+          description: ''
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
-
+          headers: {}
+      security: []
   /markers:
     get:
-      tags:
-        - 标记点 (Markers)
-      summary: 获取标记点列表（支持多维度过滤）
+      summary: 获取标记点列表
+      deprecated: false
       description: 按时间、高度、类型、关键词、空间范围等条件过滤标记。
-      security:
-        - bearerAuth: []
+      tags:
+        - 标记点
       parameters:
-        - in: query
-          name: time_start
-          schema:
-            type: string
-            format: date-time
+        - name: time_start
+          in: query
           description: ISO 8601 格式，筛选时间范围开始点。
-        - in: query
-          name: time_end
+          required: false
           schema:
             type: string
             format: date-time
+        - name: time_end
+          in: query
           description: ISO 8601 格式，筛选时间范围结束点。
-        - in: query
-          name: min_height
+          required: false
           schema:
-            type: number
-            format: float
+            type: string
+            format: date-time
+        - name: min_height
+          in: query
           description: 最小高度（米）
-        - in: query
-          name: max_height
+          required: false
           schema:
             type: number
             format: float
+        - name: max_height
+          in: query
           description: 最大高度（米）
-        - in: query
-          name: type
+          required: false
           schema:
-            type: string
+            type: number
+            format: float
+        - name: type
+          in: query
           description: 标记类型 ID
-        - in: query
-          name: keyword
+          required: false
           schema:
             type: string
+        - name: keyword
+          in: query
           description: 关键词搜索（匹配标题、描述）
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: 成功的标记列表
+          description: ''
           content:
             application/json:
               schema:
@@ -117,357 +133,138 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Marker'
-
+          headers: {}
+      security: []
     post:
-      tags:
-        - 标记点 (Markers)
       summary: 创建一个新的 4D 标记点
-      security:
-        - bearerAuth: []
+      deprecated: false
+      description: ''
+      tags:
+        - 标记点
+      parameters: []
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/MarkerCreateRequest'
+            example: ''
       responses:
         '201':
-          description: 标记创建成功
+          description: ''
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Marker'
-
+          headers: {}
+      security: []
   /markers/{markerId}:
     get:
-      tags:
-        - 标记点 (Markers)
       summary: 获取单个标记点详情
-      security:
-        - bearerAuth: []
+      deprecated: false
+      description: ''
+      tags:
+        - 标记点
       parameters:
-        - in: path
-          name: markerId
+        - name: markerId
+          in: path
+          description: ''
           required: true
+          example: ''
           schema:
             type: string
             format: uuid
       responses:
         '200':
-          description: 标记点详情
+          description: ''
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Marker'
+          headers: {}
         '404':
-          description: 未找到标记点
-
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+          headers: {}
+      security: []
     put:
-      tags:
-        - 标记点 (Markers)
       summary: 更新一个标记点
-      security:
-        - bearerAuth: []
+      deprecated: false
+      description: ''
+      tags:
+        - 标记点
       parameters:
-        - in: path
-          name: markerId
+        - name: markerId
+          in: path
+          description: ''
           required: true
+          example: ''
           schema:
             type: string
             format: uuid
       requestBody:
-        required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/MarkerUpdateRequest'
+            schema: {}
+            example: ''
       responses:
         '200':
-          description: 更新成功
+          description: ''
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Marker'
-
+          headers: {}
+      security: []
     delete:
-      tags:
-        - 标记点 (Markers)
       summary: 删除一个标记点
-      security:
-        - bearerAuth: []
+      deprecated: false
+      description: ''
+      tags:
+        - 标记点
       parameters:
-        - in: path
-          name: markerId
+        - name: markerId
+          in: path
+          description: ''
           required: true
+          example: ''
           schema:
             type: string
             format: uuid
       responses:
         '204':
-          description: 删除成功，无返回内容
-
-  /markers/{markerId}/history:
-    get:
-      tags:
-        - 标记点 (Markers)
-      summary: 获取标记的版本历史
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: markerId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: 版本历史列表
+          description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MarkerHistoryResponse'
-
-  /markers/{markerId}/share:
-    post:
-      tags:
-        - 协作 (Collaboration)
-      summary: 共享标记点
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: markerId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ShareRequest'
-      responses:
-        '200':
-          description: 共享成功
-
-  /markers/import:
-    post:
-      tags:
-        - 数据导入导出 (Data I/O)
-      summary: 批量导入标记点
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                  description: GeoJSON, CSV, 或 KML 文件
-                format:
-                  type: string
-                  enum: [geojson, csv, kml]
-      responses:
-        '202':
-          description: 导入任务已接受
-
-  /markers/export:
-    get:
-      tags:
-        - 数据导入导出 (Data I/O)
-      summary: 批量导出标记点
-      description: 导出为 GeoJSON, CSV, 或 KML 格式。可复用 /markers 的所有过滤参数。
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: query
-          name: format
-          required: true
-          schema:
-            type: string
-            enum: [geojson, csv, kml]
-        # ... (此处可复制 /markers GET 的所有过滤参数) ...
-      responses:
-        '200':
-          description: 返回导出的文件流
-          content:
-            application/octet-stream: {}
-
+                type: object
+                properties: {}
+          headers: {}
+      security: []
   /marker-types:
     get:
-      tags:
-        - 标记类型 (Marker Types)
       summary: 获取所有标记类型模板
-      security:
-        - bearerAuth: []
+      deprecated: false
+      description: ''
+      tags:
+        - 标记类型
+      parameters: []
       responses:
         '200':
-          description: 标记类型列表
+          description: ''
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/MarkerType'
-
-    post:
-      tags:
-        - 标记类型 (Marker Types)
-      summary: (管理员) 创建新的标记类型模板
-      security:
-        - bearerAuth: [] # 建议增加管理员权限
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MarkerType'
-      responses:
-        '201':
-          description: 创建成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MarkerType'
-
-  /sync:
-    post:
-      tags:
-        - 离线同步 (Offline Sync)
-      summary: 同步离线数据
-      description: 当客户端从离线恢复时调用，用于推送本地变更并拉取服务器更新。
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SyncRequest'
-      responses:
-        '200':
-          description: 同步完成
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SyncResponse'
-
-# 3. 可重用组件 (Schemas & Security)
+          headers: {}
+      security: []
 components:
-  # 安全方案
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-  # 数据模型 (Schemas)
   schemas:
-    # 核心模型：标记点
-    Marker:
-      type: object
-      description: 4D 标记点核心数据模型
-      properties:
-        id:
-          type: string
-          format: uuid
-        longitude:
-          type: number
-          format: double
-          description: 经度
-        latitude:
-          type: number
-          format: double
-          description: 纬度
-        height:
-          type: number
-          format: float
-          description: 高度
-        time_start:
-          type: string
-          format: date-time
-          description: 时间点或时间区间（开始）
-        time_end:
-          type: string
-          format: date-time
-          description: 时间区间（结束）
-        title:
-          type: string
-          description: 标记标题
-        description:
-          type: string
-          description: 标记描述
-        type:
-          $ref: '#/components/schemas/MarkerTypeSummary'
-        visibility:
-          type: string
-          enum: [private, public, team]
-        customProperties:
-          type: object
-          description: 基于类型的自定义属性
-        attachments:
-          type: array
-          items:
-            $ref: '#/components/schemas/Attachment'
-        createdBy:
-          type: object
-          properties:
-            userId:
-              type: string
-            username:
-              type: string
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-
-    # 标记点创建请求 (POST)
-    MarkerCreateRequest:
-      type: object
-      required: [longitude, latitude, time_start, title, typeId]
-      properties:
-        longitude:
-          type: number
-          format: double
-        latitude:
-          type: number
-          format: double
-        height:
-          type: number
-          format: float
-        time_start:
-          type: string
-          format: date-time
-        time_end:
-          type: string
-          format: date-time
-        title:
-          type: string
-        description:
-          type: string
-        typeId:
-          type: string
-          description: 标记类型的 ID
-        visibility:
-          type: string
-          enum: [private, public, team]
-          default: private
-        customProperties:
-          type: object
-        attachments:
-          type: array
-          items:
-            $ref: '#/components/schemas/Attachment'
-
-    # 标记点更新请求 (PUT) - 字段可选
     MarkerUpdateRequest:
       type: object
       properties:
@@ -477,201 +274,203 @@ components:
         latitude:
           type: number
           format: double
-        height:
+        altitude:
           type: number
-          format: float
+          format: double
         time_start:
           type: string
           format: date-time
+          description: 起始时间
         time_end:
           type: string
           format: date-time
+          description: 结束时间
         title:
           type: string
+          description: 标题
         description:
           type: string
+          description: 描述
         typeId:
           type: string
+          description: 标记类型的 ID
         visibility:
           type: string
-          enum: [private, public, team]
-        customProperties:
-          type: object
-
-    # 标记类型
-    MarkerType:
+          enum:
+            - private
+            - public
+            - team
+          default: private
+          description: 标记的可见性
+    MarkerCreateRequest:
       type: object
-      description: 标记类型模板
+      required:
+        - longitude
+        - latitude
+        - time_start
+        - title
+        - typeId
       properties:
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
+        altitude:
+          type: number
+          format: double
+        time_start:
+          type: string
+          format: date-time
+          description: 起始时间
+        time_end:
+          type: string
+          format: date-time
+          description: 结束时间
+        title:
+          type: string
+          description: 标题
+        description:
+          type: string
+          description: 描述
         typeId:
           type: string
-          format: uuid
-        name:
+          description: 标记类型的 ID
+        visibility:
           type: string
-        icon:
-          type: string
-        color:
-          type: string
-          format: hex-color
-        fieldsTemplate:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-              label:
-                type: string
-              type:
-                type: string
-                enum: [string, number, date, select, boolean]
-
-    MarkerTypeSummary:
+          enum:
+            - private
+            - public
+            - team
+          default: private
+          description: 标记的可见性
+    Marker:
       type: object
+      description: 4D 标记点核心数据模型
       properties:
-        typeId:
+        id:
           type: string
-        name:
+        longitude:
+          type: number
+          format: double
+          description: 经度
+        latitude:
+          type: number
+          format: double
+          description: 纬度
+        altitude:
+          type: number
+          description: 高度
+          format: double
+        time_start:
           type: string
-
-    Attachment:
-      type: object
-      properties:
-        url:
+          format: date-time
+          description: 开始时间
+        time_end:
           type: string
+          format: date-time
+          description: 结束时间
+        title:
+          type: string
+          description: 标记标题
+        description:
+          type: string
+          description: 标记描述
         type:
+          $ref: '#/components/schemas/MarkerType'
+          description: 标记类型
+        visibility:
           type: string
-          enum: [image, file, video]
-        size:
-          type: integer
-
-    # 认证相关
-    RegisterRequest:
-      type: object
-      properties:
-        identity:
-          type: string
-          description: 手机号或邮箱
-        password:
-          type: string
-          format: password
-        verificationCode:
-          type: string
-
-    LoginRequest:
-      type: object
-      properties:
-        identity:
-          type: string
-        password:
-          type: string
-          format: password
-
-    LoginResponse:
-      type: object
-      properties:
-        token:
-          type: string
-        expiresIn:
-          type: integer
-        user:
+          enum:
+            - private
+            - public
+            - team
+          description: 标记可见性
+        createdBy:
           type: object
           properties:
             userId:
               type: string
             username:
               type: string
-            role:
+          description: 创建者
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新时间
+      required:
+        - id
+        - longitude
+        - latitude
+        - time_start
+        - title
+    MarkerType:
+      type: object
+      description: 标记类型模板
+      properties:
+        typeId:
+          type: string
+        name:
+          type: string
+        icon:
+          type: string
+          description: 图标名
+        color:
+          type: string
+          format: hex-color
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - phone
+        - password
+      properties:
+        username:
+          type: string
+          description: 用户名
+        email:
+          type: string
+          format: email
+          description: 邮箱
+        phone:
+          type: string
+          description: 手机号
+        password:
+          type: string
+          format: password
+    LoginRequest:
+      type: object
+      properties:
+        identity:
+          type: string
+          description: 手机号/用户名/邮箱
+        password:
+          type: string
+          format: password
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT Token
+        expiresIn:
+          type: integer
+          description: 过期时间
+        user:
+          type: object
+          properties:
+            userId:
               type: string
-
-    # 协作相关
-    ShareRequest:
-      type: object
-      properties:
-        targetType:
-          type: string
-          enum: [user, team]
-        targetId:
-          type: string
-          description: 用户ID或团队ID
-        permission:
-          type: string
-          enum: [Owner, Editor, Viewer] #
-
-    # 版本历史
-    MarkerHistoryResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            type: object
-            properties:
-              version:
-                type: integer
-              changedAt:
-                type: string
-                format: date-time
-              changedBy:
-                type: string
-              snapshot:
-                type: object # 可以是 Marker 对象的快照
-
-    # 同步相关
-    SyncRequest:
-      type: object
-      properties:
-        lastSyncTime:
-          type: string
-          format: date-time
-        localChanges:
-          type: array
-          items:
-            $ref: '#/components/schemas/LocalChange'
-
-    SyncResponse:
-      type: object
-      properties:
-        serverUpdates:
-          type: array
-          items:
-            $ref: '#/components/schemas/ServerChange'
-        conflicts:
-          type: array
-          items:
-            $ref: '#/components/schemas/SyncConflict'
-        newSyncTime:
-          type: string
-          format: date-time
-
-    LocalChange:
-      type: object
-      properties:
-        action:
-          type: string
-          enum: [create, update, delete]
-        markerId:
-          type: string # update/delete 时需要
-        payload:
-          type: object # create/update 时需要
-
-    ServerChange:
-      type: object
-      properties:
-        action:
-          type: string
-          enum: [update, delete] # 服务器只推送更新或删除
-        markerId:
-          type: string
-        payload:
-          type: object # update 时需要
-
-    SyncConflict:
-      type: object
-      properties:
-        markerId:
-          type: string
-        serverVersion:
-          type: object
-        localVersion:
-          type: object
+              description: 用户ID
+            username:
+              type: string
+              description: 用户名
+  securitySchemes: {}
+servers: []
+security: []
