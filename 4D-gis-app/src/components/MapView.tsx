@@ -19,7 +19,6 @@ L.Icon.Default.mergeOptions({
 const ONLINE_URL = "https://xyz.sayaz.site/tile/{z}/{x}/{y}.png";
 const ONLINE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 const OFFLINE_URL = "tile/{z}/{x}/{y}.pbf";
-const OFFLINE_ATTRIBUTION = 'Offline Vector Data &copy; OSM';
 
 const CustomMarkerIcon = ({color}: { color: string }) => (
     <div className="relative">
@@ -33,7 +32,6 @@ const CustomMarkerIcon = ({color}: { color: string }) => (
     </div>
 );
 
-// ... CustomZoomControl 组件 (无变化) ...
 const CustomZoomControl = ({map}: { map: L.Map | null }) => {
     return (
         <div className="absolute top-4 right-4 flex flex-col gap-2 z-50">
@@ -47,7 +45,6 @@ const CustomZoomControl = ({map}: { map: L.Map | null }) => {
     );
 };
 
-// ... UserLocationIcon 组件 (无变化) ...
 const UserLocationIcon = () => (
     <div className="relative">
         <div
@@ -59,7 +56,6 @@ const UserLocationIcon = () => (
     </div>
 );
 
-// ... SetMap 组件 (无变化) ...
 const SetMap = ({setMap}: { setMap: React.Dispatch<React.SetStateAction<L.Map | null>> }) => {
     const map = useMap();
     useEffect(() => {
@@ -73,9 +69,11 @@ interface MapViewProps {
     onMarkerClick: (marker: MarkerType) => void;
     currentTime: Date;
     activeFilters: string[];
+    showBasemap?: boolean;
+    showMarkers?: boolean;
 }
 
-export function MapView({markers, onMarkerClick, currentTime, activeFilters}: MapViewProps) {
+export function MapView({markers, onMarkerClick, currentTime, activeFilters, showBasemap, showMarkers}: MapViewProps) {
     const [map, setMap] = useState<L.Map | null>(null);
     const [isLocating, setIsLocating] = useState(false);
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -156,20 +154,22 @@ export function MapView({markers, onMarkerClick, currentTime, activeFilters}: Ma
                 style={{zIndex: 0}}
                 zoomControl={false}
             >
-                {isOnline ? (
-                    <TileLayer
-                        key="online-raster" // key 确保在切换时 React 会重建组件
-                        url={ONLINE_URL}
-                        attribution={ONLINE_ATTRIBUTION}
-                    />
-                ) : (
-                    <VectorGridComponent
-                        key="offline-vector"
-                        url={OFFLINE_URL}
-                    />
+                {showBasemap && (
+                    isOnline ? (
+                        <TileLayer
+                            key="online-raster"
+                            url={ONLINE_URL}
+                            attribution={ONLINE_ATTRIBUTION}
+                        />
+                    ) : (
+                        <VectorGridComponent
+                            key="offline-vector"
+                            url={OFFLINE_URL}
+                        />
+                    )
                 )}
 
-                {visibleMarkers.map(marker => {
+                {showMarkers && visibleMarkers.map(marker => {
                     const color = getColorForMarker(marker);
                     const iconHtml = ReactDOMServer.renderToString(
                         <CustomMarkerIcon color={color}/>
@@ -198,7 +198,6 @@ export function MapView({markers, onMarkerClick, currentTime, activeFilters}: Ma
                     );
                 })}
 
-                {/* ... 渲染用户位置 (无变化) ... */}
                 {userLocation && (
                     <Marker
                         position={userLocation}
@@ -218,31 +217,29 @@ export function MapView({markers, onMarkerClick, currentTime, activeFilters}: Ma
 
             </MapContainer>
 
-            {/* ... CustomZoomControl (无变化) ... */}
             <CustomZoomControl map={map}/>
 
-            {/* ... 左上角提示 (无变化) ... */}
             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm">
                 <p className="text-xs text-muted-foreground">Interactive Map View</p>
             </div>
 
-            {/* ... 右下角定位按钮 (无变化) ... */}
+
             <div className="absolute bottom-4 right-4">
                 <Button
                     size="icon"
                     variant="secondary"
                     className="h-12 w-12 shadow-md rounded-full"
-                    onClick={getUserLocation} // <-- 现在会调用新的 async 函数
+                    onClick={getUserLocation}
                     disabled={isLocating}
                 >
                     <Navigation className={`h-5 w-5 ${isLocating ? 'animate-spin' : ''}`}/>
                 </Button>
             </div>
 
-            {/* ... 左下角提示 (无变化) ... */}
             <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm">
                 <p className="text-xs text-muted-foreground">
-                    Showing {visibleMarkers.length} of {markers.length} markers
+                    {showMarkers ? `Showing ${visibleMarkers.length} of ${markers.length} markers` : 'Markers hidden'}
+                    {!showBasemap && ' • Basemap hidden'}
                     {userLocation && ' • 已定位'}
                 </p>
             </div>

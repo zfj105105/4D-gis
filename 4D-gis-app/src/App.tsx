@@ -21,6 +21,9 @@ export default function App() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [activeFilters, setActiveFilters] = useState<string[]>([]);
+    const [showBasemap, setShowBasemap] = useState(true);
+    const [showMarkers, setShowMarkers] = useState(true);
+
 
     const {
         data: markers = [],
@@ -64,6 +67,10 @@ export default function App() {
                             onMarkerSelect={handleMarkerClick}
                             activeFilters={activeFilters}
                             onFiltersChange={setActiveFilters}
+                            showBasemap={showBasemap}
+                            onShowBasemapChange={setShowBasemap}
+                            showMarkers={showMarkers}
+                            onShowMarkersChange={setShowMarkers}
                         />
                     </SheetContent>
                 </Sheet>
@@ -79,6 +86,8 @@ export default function App() {
                     onMarkerClick={handleMarkerClick}
                     currentTime={currentTime}
                     activeFilters={activeFilters}
+                    showBasemap={showBasemap}
+                    showMarkers={showMarkers}
                 />
             </div>
 

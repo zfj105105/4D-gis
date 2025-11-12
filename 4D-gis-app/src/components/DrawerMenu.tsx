@@ -1,5 +1,5 @@
 import {Tabs, TabsContent, TabsList, TabsTrigger} from './ui/tabs';
-import {BarChart3, Eye, EyeOff, Layers, MapPin} from 'lucide-react';
+import {BarChart3, Eye, Layers, MapPin} from 'lucide-react';
 import {Badge} from './ui/badge';
 import {Checkbox} from './ui/checkbox';
 import {Label} from './ui/label';
@@ -12,9 +12,22 @@ interface DrawerMenuProps {
     onMarkerSelect: (marker: Marker) => void;
     activeFilters: string[];
     onFiltersChange: (filters: string[]) => void;
+    showBasemap?: boolean;
+    onShowBasemapChange: (show: boolean) => void;
+    showMarkers?: boolean;
+    onShowMarkersChange: (show: boolean) => void;
 }
 
-export function DrawerMenu({markers, onMarkerSelect, activeFilters, onFiltersChange}: DrawerMenuProps) {
+export function DrawerMenu({
+                               markers,
+                               onMarkerSelect,
+                               activeFilters,
+                               onFiltersChange,
+                               showBasemap,
+                               onShowBasemapChange,
+                               showMarkers,
+                               onShowMarkersChange
+                           }: DrawerMenuProps) {
     const categories = Array.from(new Set(markers.map(m => m.type?.name || 'Uncategorized')));
 
     const toggleFilter = (category: string) => {
@@ -32,7 +45,7 @@ export function DrawerMenu({markers, onMarkerSelect, activeFilters, onFiltersCha
 
     const getCategoryColor = (categoryName: string) => {
         const found = markers.find(m => (m.type?.name || 'Uncategorized') === categoryName && m.type?.color);
-        return found?.type?.color ?? '#6b7280';
+        return found?.type?.color ?? '#000000';
     };
 
     return (
@@ -70,7 +83,10 @@ export function DrawerMenu({markers, onMarkerSelect, activeFilters, onFiltersCha
                                         <Eye className="h-4 w-4 text-muted-foreground"/>
                                         <Label>Base Map</Label>
                                     </div>
-                                    <Checkbox defaultChecked/>
+                                    <Checkbox
+                                        checked={showBasemap}
+                                        onCheckedChange={(checked: any) => onShowBasemapChange(!!checked)}
+                                    />
                                 </div>
 
                                 <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
@@ -78,24 +94,27 @@ export function DrawerMenu({markers, onMarkerSelect, activeFilters, onFiltersCha
                                         <Eye className="h-4 w-4 text-muted-foreground"/>
                                         <Label>Markers</Label>
                                     </div>
-                                    <Checkbox defaultChecked/>
+                                    <Checkbox
+                                        checked={showMarkers}
+                                        onCheckedChange={(checked: any) => onShowMarkersChange(!!checked)}
+                                    />
                                 </div>
 
-                                <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <Eye className="h-4 w-4 text-muted-foreground"/>
-                                        <Label>Labels</Label>
-                                    </div>
-                                    <Checkbox defaultChecked/>
-                                </div>
+                                {/*<div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">*/}
+                                {/*    <div className="flex items-center gap-2">*/}
+                                {/*        <Eye className="h-4 w-4 text-muted-foreground"/>*/}
+                                {/*        <Label>Labels</Label>*/}
+                                {/*    </div>*/}
+                                {/*    <Checkbox defaultChecked/>*/}
+                                {/*</div>*/}
 
-                                <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <EyeOff className="h-4 w-4 text-muted-foreground"/>
-                                        <Label>Heatmap</Label>
-                                    </div>
-                                    <Checkbox/>
-                                </div>
+                                {/*<div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">*/}
+                                {/*    <div className="flex items-center gap-2">*/}
+                                {/*        <EyeOff className="h-4 w-4 text-muted-foreground"/>*/}
+                                {/*        <Label>Heatmap</Label>*/}
+                                {/*    </div>*/}
+                                {/*    <Checkbox/>*/}
+                                {/*</div>*/}
                             </div>
 
                             <Separator className="my-4"/>
@@ -112,7 +131,7 @@ export function DrawerMenu({markers, onMarkerSelect, activeFilters, onFiltersCha
                                             <Label>{category}</Label>
                                         </div>
                                         <Checkbox
-                                            checked={activeFilters.length === 0 || activeFilters.includes(category)}
+                                            checked={activeFilters.includes(category)}
                                             onCheckedChange={() => toggleFilter(category)}
                                         />
                                     </div>
