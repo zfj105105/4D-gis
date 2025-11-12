@@ -16,7 +16,7 @@ export default function App() {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedMarker, setSelectedMarker] = useState<Marker | null>(null);
     const [sharingDialogOpen, setSharingDialogOpen] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date('2024-11-01T00:00:00'));
+    const [currentTime, setCurrentTime] = useState(new Date('2000-11-01T00:00:00'));
     const [timeGranularity, setTimeGranularity] = useState<'year' | 'month' | 'day' | 'hour'>('day');
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -58,6 +58,10 @@ export default function App() {
     const handleOpenCreateMarker = (position: [number, number, number?]) => {
         setCreateMarkerPosition(position);
         setCreateMarkerDialogOpen(true);
+    };
+
+    const handleSpeedChange = (speed: number) => {
+        setPlaybackSpeed(speed);
     };
 
     const handleCreateMarker = (markerData: any) => {
@@ -140,7 +144,8 @@ export default function App() {
                     isPlaying={isPlaying}
                     onPlayingChange={setIsPlaying}
                     playbackSpeed={playbackSpeed}
-                    onSpeedChange={setPlaybackSpeed}
+                    onSpeedChange={handleSpeedChange}
+                    markers={markers}
                 />
             </div>
 
