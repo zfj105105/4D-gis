@@ -13,9 +13,40 @@ export const fetchMarkers = async (): Promise<Marker[]> => {
     }));
 };
 
+export const createMarker = async (markerData: MarkerCreateRequest): Promise<Marker> => {
+    const response = await apiClient.post<Marker>('/markers', markerData);
+    const marker = response.data;
+
+    return {
+        ...marker,
+        time_start: new Date(marker.time_start),
+        time_end: marker.time_end ? new Date(marker.time_end) : undefined,
+        createdAt: marker.createdAt ? new Date(marker.createdAt) : undefined,
+        updatedAt: marker.updatedAt ? new Date(marker.updatedAt) : undefined,
+    };
+};
+
 export interface MarkerResponse {
     data?: Marker[];
     total?: number;
+    [property: string]: any;
+}
+
+/**
+ * Request
+ *
+ * MarkerCreateRequest
+ */
+export interface MarkerCreateRequest {
+    altitude?: number;
+    description?: string;
+    latitude: number;
+    longitude: number;
+    time_end?: Date;
+    time_start: Date;
+    title: string;
+    typeId: string;
+    visibility?: Visibility;
     [property: string]: any;
 }
 

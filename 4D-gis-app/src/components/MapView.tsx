@@ -1,7 +1,7 @@
 // typescript
 import React, {useEffect, useState} from 'react';
 import {Geolocation} from '@capacitor/geolocation'; // <-- [新增] 导入 Capacitor 插件
-import {MapPin, Navigation, User} from 'lucide-react';
+import {MapPin, Navigation, Plus, User} from 'lucide-react';
 import {Button} from './ui/button';
 import type {Marker as MarkerType} from '../api/marker';
 import {MapContainer, Marker, TileLayer, useMap} from 'react-leaflet';
@@ -65,18 +65,27 @@ const SetMap = ({setMap}: { setMap: React.Dispatch<React.SetStateAction<L.Map | 
 };
 
 interface MapViewProps {
-    markers: MarkerType[];
-    onMarkerClick: (marker: MarkerType) => void;
-    currentTime: Date;
-    activeFilters: string[];
-    showBasemap?: boolean;
-    showMarkers?: boolean;
+    markers: MarkerType[],
+    onMarkerClick: (marker: MarkerType) => void,
+    currentTime: Date,
+    activeFilters: string[],
+    showBasemap?: boolean,
+    showMarkers?: boolean,
+    onCreateMarker?: (position: [number, number, number?]) => void,
 }
 
-export function MapView({markers, onMarkerClick, currentTime, activeFilters, showBasemap, showMarkers}: MapViewProps) {
+export function MapView({
+                            markers,
+                            onMarkerClick,
+                            currentTime,
+                            activeFilters,
+                            showBasemap,
+                            showMarkers,
+                            onCreateMarker
+                        }: MapViewProps) {
     const [map, setMap] = useState<L.Map | null>(null);
     const [isLocating, setIsLocating] = useState(false);
-    const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+    const [userLocation, setUserLocation] = useState<[number, number, number?] | null>(null);
 
     const {isOnline} = useNetworkStatus();
 
@@ -117,13 +126,12 @@ export function MapView({markers, onMarkerClick, currentTime, activeFilters, sho
                 maximumAge: 300000 // 5分钟缓存
             });
 
-            // 成功后更新状态和地图
-            const {latitude, longitude} = position.coords;
-            const location: [number, number] = [latitude, longitude];
+            const {latitude, longitude, altitude} = position.coords;
+            const location: [number, number, number?] = [latitude, longitude, altitude ?? undefined];
             setUserLocation(location);
 
             if (map) {
-                map.setView(location, 15);
+                map.setView(location, 13);
             }
 
         } catch (error) {
@@ -137,6 +145,19 @@ export function MapView({markers, onMarkerClick, currentTime, activeFilters, sho
         } finally {
             setIsLocating(false);
         }
+    };
+
+    const handleCreateMarkerClick = () => {
+        let defaultPosition: [number, number, number?];
+        if (userLocation) {
+            defaultPosition = userLocation;
+        } else if (map) {
+            const center = map.getCenter();
+            defaultPosition = [center.lat, center.lng, undefined];
+        } else {
+            defaultPosition = [0, 0, undefined];
+        }
+        onCreateMarker?.(defaultPosition);
     };
 
 
@@ -200,7 +221,7 @@ export function MapView({markers, onMarkerClick, currentTime, activeFilters, sho
 
                 {userLocation && (
                     <Marker
-                        position={userLocation}
+                        position={[userLocation[0], userLocation[1]]} // 只使用经纬度
                         icon={L.divIcon({
                             html: ReactDOMServer.renderToString(<UserLocationIcon/>),
                             className: 'leaflet-user-location-icon',
@@ -224,7 +245,15 @@ export function MapView({markers, onMarkerClick, currentTime, activeFilters, sho
             </div>
 
 
-            <div className="absolute bottom-4 right-4">
+            <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+                <Button
+                    size="icon"
+                    variant="default"
+                    className="h-12 w-12 shadow-md rounded-full bg-green-500 hover:bg-green-600"
+                    onClick={handleCreateMarkerClick}
+                >
+                    <Plus className="h-5 w-5"/>
+                </Button>
                 <Button
                     size="icon"
                     variant="secondary"
