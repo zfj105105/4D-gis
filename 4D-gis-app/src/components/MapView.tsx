@@ -1,6 +1,6 @@
 // typescript
 import React, {useEffect, useState} from 'react';
-import {Geolocation} from '@capacitor/geolocation'; // <-- [新增] 导入 Capacitor 插件
+import {Geolocation} from '@capacitor/geolocation';
 import {MapPin, Navigation, Plus, User} from 'lucide-react';
 import {Button} from './ui/button';
 import type {Marker as MarkerType} from '../api/marker';
@@ -9,6 +9,7 @@ import L from 'leaflet';
 import ReactDOMServer from 'react-dom/server';
 import {VectorGridComponent} from './VectorGridComponent';
 import {useNetworkStatus} from '../hooks/useNetworkStatus'
+import {Capacitor} from "@capacitor/core";
 
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
@@ -108,22 +109,24 @@ export function MapView({
     const getUserLocation = async () => {
         setIsLocating(true);
         try {
-            let permStatus = await Geolocation.checkPermissions();
-            if (permStatus.location !== 'granted') {
-                const permissionResult = await Geolocation.requestPermissions();
-                if (permissionResult.location !== 'granted') {
-                    // 用户拒绝了
-                    console.error('用户拒绝了定位权限');
-                    alert('您需要开启定位权限才能使用此功能。');
-                    return; // 提前退出
+
+            if (Capacitor.isNativePlatform()) {
+                console.log("isNativePlatform detected, checking permissions");
+                let permStatus = await Geolocation.checkPermissions();
+                if (permStatus.location !== 'granted') {
+                    const permissionResult = await Geolocation.requestPermissions(); // 在原生平台调用
+                    if (permissionResult.location !== 'granted') {
+                        console.error('用户拒绝了定位权限');
+                        alert('您需要开启定位权限才能使用此功能。');
+                        setIsLocating(false); // 别忘了设置
+                        return;
+                    }
                 }
             }
-
-            // 获取当前位置
             const position = await Geolocation.getCurrentPosition({
                 enableHighAccuracy: true,
                 timeout: 10000,
-                maximumAge: 300000 // 5分钟缓存
+                maximumAge: 300000
             });
 
             const {latitude, longitude, altitude} = position.coords;
@@ -137,7 +140,10 @@ export function MapView({
         } catch (error) {
             console.error('获取位置失败:', error);
             const errorMsg = String(error);
-            if (errorMsg.includes('Location services are not enabled') || errorMsg.includes('位置服务未启用')) {
+
+            if (errorMsg.includes('User denied Geolocation') || errorMsg.includes('用户拒绝')) {
+                alert('您拒绝了定位权限，请在浏览器或系统设置中重新开启。');
+            } else if (errorMsg.includes('Location services are not enabled') || errorMsg.includes('位置服务未启用')) {
                 alert('无法获取您的位置，请确保您的设备已开启 GPS。');
             } else {
                 alert('无法获取您的位置，请检查位置权限设置。');
@@ -162,9 +168,11 @@ export function MapView({
 
     const getInitialLocation = async () => {
         try {
-            const permStatus = await Geolocation.checkPermissions();
-            if (permStatus.location !== 'granted') {
-                return; // 用户没授权，直接退出，等待按钮点击
+            if (Capacitor.isNativePlatform()) {
+                const permStatus = await Geolocation.checkPermissions();
+                if (permStatus.location !== 'granted') {
+                    return;
+                }
             }
 
             setIsLocating(true);
@@ -179,15 +187,16 @@ export function MapView({
             setUserLocation(location);
 
             if (map) {
-                map.setView(location, 13); // 自动飞过去
+                map.setView(location, 13);
             }
 
         } catch (error) {
-            console.warn("无法静默获取初始位置:", error);
+            console.warn("无法静默获取初始位置 (这在 Web 上是正常行为):", error);
         } finally {
             setIsLocating(false);
         }
     };
+
     useEffect(() => {
         getInitialLocation();
     }, [map]);
