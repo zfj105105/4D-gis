@@ -160,10 +160,37 @@ export function MapView({
         onCreateMarker?.(defaultPosition);
     };
 
+    const getInitialLocation = async () => {
+        try {
+            const permStatus = await Geolocation.checkPermissions();
+            if (permStatus.location !== 'granted') {
+                return; // 用户没授权，直接退出，等待按钮点击
+            }
 
+            setIsLocating(true);
+            const position = await Geolocation.getCurrentPosition({
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000
+            });
+
+            const {latitude, longitude, altitude} = position.coords;
+            const location: [number, number, number?] = [latitude, longitude, altitude ?? undefined];
+            setUserLocation(location);
+
+            if (map) {
+                map.setView(location, 13); // 自动飞过去
+            }
+
+        } catch (error) {
+            console.warn("无法静默获取初始位置:", error);
+        } finally {
+            setIsLocating(false);
+        }
+    };
     useEffect(() => {
-        getUserLocation();
-    }, []);
+        getInitialLocation();
+    }, [map]);
 
     return (
         <div className="w-full h-full relative bg-slate-100">
