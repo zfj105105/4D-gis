@@ -68,21 +68,23 @@ const SetMap = ({setMap}: { setMap: React.Dispatch<React.SetStateAction<L.Map | 
 interface MapViewProps {
     markers: MarkerType[],
     onMarkerClick: (marker: MarkerType) => void,
-    currentTime: Date,
+    timeRange: [Date, Date], // 改为时间范围
     activeFilters: string[],
     showBasemap?: boolean,
     showMarkers?: boolean,
     onCreateMarker?: (position: [number, number, number?]) => void,
+    totalMarkers?: number, // 添加总标记数量参数
 }
 
 export function MapView({
                             markers,
                             onMarkerClick,
-                            currentTime,
+                            timeRange, // 使用时间范围
                             activeFilters,
                             showBasemap,
                             showMarkers,
-                            onCreateMarker
+                            onCreateMarker,
+                            totalMarkers = markers.length // 默认使用当前标记数量
                         }: MapViewProps) {
     const [map, setMap] = useState<L.Map | null>(null);
     const [isLocating, setIsLocating] = useState(false);
@@ -90,9 +92,14 @@ export function MapView({
 
     const {isOnline} = useNetworkStatus();
 
+    // 更新时间过滤逻辑以支持时间范围重合检查
     const visibleMarkers = markers.filter(marker => {
-        const timeMatch = marker.time_start <= currentTime &&
-            (!marker.time_end || marker.time_end >= currentTime);
+        const [rangeStart, rangeEnd] = timeRange;
+        const markerStart = marker.time_start;
+        const markerEnd = marker.time_end || marker.time_start;
+
+        // 检查标记时间段是否与选择的时间范围重合
+        const timeMatch = markerStart <= rangeEnd && markerEnd >= rangeStart;
 
         const categoryName = marker.type?.name || 'Uncategorized';
         const filterMatch = activeFilters.length === 0 || activeFilters.includes(categoryName);
@@ -303,7 +310,7 @@ export function MapView({
 
             <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm">
                 <p className="text-xs text-muted-foreground">
-                    {showMarkers ? `Showing ${visibleMarkers.length} of ${markers.length} markers` : 'Markers hidden'}
+                    {showMarkers ? `Showing ${visibleMarkers.length} of ${totalMarkers} markers` : 'Markers hidden'}
                     {!showBasemap && ' • Basemap hidden'}
                     {userLocation && ' • 已定位'}
                 </p>

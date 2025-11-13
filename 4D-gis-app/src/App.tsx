@@ -25,7 +25,11 @@ export default function App() {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedMarker, setSelectedMarker] = useState<Marker | null>(null);
     const [sharingDialogOpen, setSharingDialogOpen] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date('2000-11-01T00:00:00'));
+    // 改为时间范围状态
+    const [timeRange, setTimeRange] = useState<[Date, Date]>([
+        new Date('2020-09-01'),
+        new Date('2024-09-01')
+    ]);
     const [timeGranularity, setTimeGranularity] = useState<'year' | 'month' | 'day' | 'hour'>('day');
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -87,6 +91,18 @@ export default function App() {
         }
     });
 
+    // 检查标记是否与时间范围重合的函数
+    const isMarkerInTimeRange = (marker: Marker, timeRange: [Date, Date]): boolean => {
+        const [rangeStart, rangeEnd] = timeRange;
+        const markerStart = marker.time_start;
+        const markerEnd = marker.time_end || marker.time_start;
+
+        return markerStart <= rangeEnd && markerEnd >= rangeStart;
+    };
+
+    // 过滤在当前时间范围内的标记
+    const markersInTimeRange = markers.filter(marker => isMarkerInTimeRange(marker, timeRange));
+
     const handleMarkerClick = (marker: Marker) => {
         setSelectedMarker(marker);
     };
@@ -98,6 +114,11 @@ export default function App() {
 
     const handleSpeedChange = (speed: number) => {
         setPlaybackSpeed(speed);
+    };
+
+    // 新增时间范围变化处理函数
+    const handleTimeRangeChange = (range: [Date, Date]) => {
+        setTimeRange(range);
     };
 
     const handleCreateMarker = (markerData: any) => {
@@ -148,7 +169,7 @@ export default function App() {
                     </SheetTrigger>
                     <SheetContent side="left" className="w-[85vw] sm:w-96 p-0 h-screen">
                         <DrawerMenu
-                            markers={markers}
+                            markers={markersInTimeRange} // 只显示在时间范围内的标记
                             onMarkerSelect={handleMarkerClick}
                             activeFilters={activeFilters}
                             onFiltersChange={setActiveFilters}
@@ -167,21 +188,22 @@ export default function App() {
             {/* Main Map View */}
             <div className="flex-1 relative overflow-hidden">
                 <MapView
-                    markers={markers}
+                    markers={markersInTimeRange} // 只显示在时间范围内的标记
                     onMarkerClick={handleMarkerClick}
                     onCreateMarker={handleOpenCreateMarker}
-                    currentTime={currentTime}
+                    timeRange={timeRange} // 传递时间范围而不是单个时间
                     activeFilters={activeFilters}
                     showBasemap={showBasemap}
                     showMarkers={showMarkers}
+                    totalMarkers={markers.length} // 传递总标记数量
                 />
             </div>
 
             {/* Timeline Control */}
             <div className="border-t bg-card">
                 <TimelineControl
-                    currentTime={currentTime}
-                    onTimeChange={setCurrentTime}
+                    timeRange={timeRange} // 使用时间范围
+                    onTimeRangeChange={handleTimeRangeChange} // 使用时间范围变化处理函数
                     granularity={timeGranularity}
                     onGranularityChange={setTimeGranularity}
                     isPlaying={isPlaying}

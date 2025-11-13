@@ -7,8 +7,8 @@ import {Badge} from './ui/badge';
 import {Popover, PopoverContent, PopoverTrigger} from './ui/popover';
 
 interface TimelineControlProps {
-    currentTime: Date;
-    onTimeChange: (time: Date) => void;
+    timeRange: [Date, Date]; // 改为时间范围
+    onTimeRangeChange: (range: [Date, Date]) => void; // 改为范围变化回调
     granularity: 'year' | 'month' | 'day' | 'hour';
     onGranularityChange: (granularity: 'year' | 'month' | 'day' | 'hour') => void;
     isPlaying: boolean;
@@ -19,8 +19,8 @@ interface TimelineControlProps {
 }
 
 export function TimelineControl({
-                                    currentTime,
-                                    onTimeChange,
+                                    timeRange,
+                                    onTimeRangeChange,
                                     granularity,
                                     onGranularityChange,
                                     isPlaying,
@@ -29,43 +29,15 @@ export function TimelineControl({
                                     onSpeedChange,
                                     markers = [],
                                 }: TimelineControlProps) {
-    const compareTimeByGranularity = (time1: Date, time2: Date, granularity: string): number => {
-        const getTimeForComparison = (date: Date) => {
-            switch (granularity) {
-                case 'year':
-                    return date.getFullYear();
-                case 'month':
-                    return date.getFullYear() * 100 + date.getMonth();
-                case 'day':
-                    return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
-                case 'hour':
-                    return Math.floor(date.getTime() / (1000 * 60 * 60));
-                default:
-                    return date.getTime();
-            }
-        };
 
-        const value1 = getTimeForComparison(time1);
-        const value2 = getTimeForComparison(time2);
+    // 检查标记是否与选定时间范围重合
+    const isMarkerOverlapping = (marker: {time_start: Date; time_end?: Date}, selectedRange: [Date, Date]): boolean => {
+        const [rangeStart, rangeEnd] = selectedRange;
+        const markerStart = marker.time_start;
+        const markerEnd = marker.time_end || marker.time_start; // 如果没有结束时间，使用开始时间
 
-        if (value1 < value2) return -1;
-        if (value1 > value2) return 1;
-        return 0;
-    };
-
-// 检查标记是否在当前时间范围内
-    const isMarkerActive = (marker: {time_start: Date; time_end?: Date}, currentTime: Date): boolean => {
-        const startComparison = compareTimeByGranularity(marker.time_start, currentTime, granularity);
-
-        // 如果没有结束时间，只要当前时间大于等于开始时间就显示
-        if (!marker.time_end) {
-            return startComparison <= 0;
-        }
-
-        const endComparison = compareTimeByGranularity(marker.time_end, currentTime, granularity);
-
-        // 有结束时间的情况：开始时间 <= 当前时间 <= 结束时间
-        return startComparison <= 0 && endComparison >= 0;
+        // 检查两个时间区间是否重合：markerStart <= rangeEnd && markerEnd >= rangeStart
+        return markerStart <= rangeEnd && markerEnd >= rangeStart;
     };
 
     const getTimeRange = () => {
@@ -90,19 +62,32 @@ export function TimelineControl({
 
     const {min: minDate, max: maxDate} = getTimeRange();
 
-    // 计算当前时间在滑块上的位置
-    const getCurrentSliderValue = () => {
+    // 将时间转换为滑块值 (0-100)
+    const timeToSliderValue = (time: Date) => {
         const totalMs = maxDate.getTime() - minDate.getTime();
-        const currentMs = currentTime.getTime() - minDate.getTime();
+        const currentMs = time.getTime() - minDate.getTime();
         return Math.max(0, Math.min(100, (currentMs / totalMs) * 100));
     };
 
-    const [timeRange, setTimeRange] = useState([getCurrentSliderValue()]);
+    // 将滑块值转换为时间
+    const sliderValueToTime = (value: number) => {
+        const totalMs = maxDate.getTime() - minDate.getTime();
+        const targetMs = minDate.getTime() + (totalMs * value / 100);
+        return new Date(targetMs);
+    };
 
-    // 当 currentTime 改变时更新滑块位置
+    const [sliderRange, setSliderRange] = useState([
+        timeToSliderValue(timeRange[0]),
+        timeToSliderValue(timeRange[1])
+    ]);
+
+    // 当外部时间范围改变时更新滑块位置
     useEffect(() => {
-        setTimeRange([getCurrentSliderValue()]);
-    }, [currentTime, minDate, maxDate]);
+        setSliderRange([
+            timeToSliderValue(timeRange[0]),
+            timeToSliderValue(timeRange[1])
+        ]);
+    }, [timeRange, minDate, maxDate]);
 
     const getTimeIncrement = useCallback(() => {
         return {
@@ -113,81 +98,96 @@ export function TimelineControl({
         }[granularity];
     }, [granularity]);
 
-    const stepForward = useCallback(() => {
-        let newTime: Date;
+    const moveRangeForward = useCallback(() => {
+        const [startTime, endTime] = timeRange;
+        const duration = endTime.getTime() - startTime.getTime();
+
+        let newStartTime: Date;
         if (granularity === 'month') {
-            newTime = new Date(currentTime);
-            newTime.setMonth(newTime.getMonth() + 1);
+            newStartTime = new Date(startTime);
+            newStartTime.setMonth(newStartTime.getMonth() + 1);
         } else if (granularity === 'year') {
-            newTime = new Date(currentTime);
-            newTime.setFullYear(newTime.getFullYear() + 1);
+            newStartTime = new Date(startTime);
+            newStartTime.setFullYear(newStartTime.getFullYear() + 1);
         } else {
             const increment = getTimeIncrement();
-            newTime = new Date(currentTime.getTime() + increment);
+            newStartTime = new Date(startTime.getTime() + increment);
         }
 
-        if (newTime <= maxDate) {
-            onTimeChange(newTime);
+        const newEndTime = new Date(newStartTime.getTime() + duration);
+
+        if (newEndTime <= maxDate) {
+            onTimeRangeChange([newStartTime, newEndTime]);
         } else {
             onPlayingChange(false);
         }
-    }, [currentTime, granularity, getTimeIncrement, maxDate, onTimeChange, onPlayingChange]);
+    }, [timeRange, granularity, getTimeIncrement, maxDate, onTimeRangeChange, onPlayingChange]);
 
-    const stepBackward = useCallback(() => {
-        let newTime: Date;
+    const moveRangeBackward = useCallback(() => {
+        const [startTime, endTime] = timeRange;
+        const duration = endTime.getTime() - startTime.getTime();
+
+        let newStartTime: Date;
         if (granularity === 'month') {
-            newTime = new Date(currentTime);
-            newTime.setMonth(newTime.getMonth() - 1);
+            newStartTime = new Date(startTime);
+            newStartTime.setMonth(newStartTime.getMonth() - 1);
         } else if (granularity === 'year') {
-            newTime = new Date(currentTime);
-            newTime.setFullYear(newTime.getFullYear() - 1);
+            newStartTime = new Date(startTime);
+            newStartTime.setFullYear(newStartTime.getFullYear() - 1);
         } else {
             const decrement = getTimeIncrement();
-            newTime = new Date(currentTime.getTime() - decrement);
+            newStartTime = new Date(startTime.getTime() - decrement);
         }
-        if (newTime >= minDate) {
-            onTimeChange(newTime);
-        }
-    }, [currentTime, granularity, getTimeIncrement, minDate, onTimeChange]);
 
+        const newEndTime = new Date(newStartTime.getTime() + duration);
+
+        if (newStartTime >= minDate) {
+            onTimeRangeChange([newStartTime, newEndTime]);
+        }
+    }, [timeRange, granularity, getTimeIncrement, minDate, onTimeRangeChange]);
+
+    // 播放功能：移动时间范围
     useEffect(() => {
         if (!isPlaying) return;
 
         const interval = setInterval(() => {
-            // 直接在这里实现时间递增逻辑，避免依赖 stepForward
-            let newTime: Date;
+            const [startTime, endTime] = timeRange;
+            const duration = endTime.getTime() - startTime.getTime();
+
+            let newStartTime: Date;
             if (granularity === 'month') {
-                newTime = new Date(currentTime);
-                newTime.setMonth(newTime.getMonth() + 1);
+                newStartTime = new Date(startTime);
+                newStartTime.setMonth(newStartTime.getMonth() + 1);
             } else if (granularity === 'year') {
-                newTime = new Date(currentTime);
-                newTime.setFullYear(newTime.getFullYear() + 1);
+                newStartTime = new Date(startTime);
+                newStartTime.setFullYear(newStartTime.getFullYear() + 1);
             } else {
                 const increment = {
                     hour: 1000 * 60 * 60,
                     day: 1000 * 60 * 60 * 24,
                 }[granularity];
-                newTime = new Date(currentTime.getTime() + increment);
+                newStartTime = new Date(startTime.getTime() + increment);
             }
 
-            if (newTime <= maxDate) {
-                onTimeChange(newTime);
+            const newEndTime = new Date(newStartTime.getTime() + duration);
+
+            if (newEndTime <= maxDate) {
+                onTimeRangeChange([newStartTime, newEndTime]);
             } else {
                 onPlayingChange(false);
             }
         }, 1000 / playbackSpeed);
 
         return () => clearInterval(interval);
-    }, [isPlaying, playbackSpeed, currentTime]);
+    }, [isPlaying, playbackSpeed, timeRange]);
 
-    const handleTimeSliderChange = (value: number[]) => {
-        const percentage = value[0];
-        const totalMs = maxDate.getTime() - minDate.getTime();
-        const targetMs = minDate.getTime() + (totalMs * percentage / 100);
-        const newDate = new Date(targetMs);
+    const handleTimeSliderChange = (values: number[]) => {
+        const [startValue, endValue] = values.sort((a, b) => a - b); // 确保开始时间小于结束时间
+        const newStartTime = sliderValueToTime(startValue);
+        const newEndTime = sliderValueToTime(endValue);
 
-        setTimeRange(value);
-        onTimeChange(newDate);
+        setSliderRange([startValue, endValue]);
+        onTimeRangeChange([newStartTime, newEndTime]);
     };
 
     const formatDate = (date: Date) => {
@@ -219,17 +219,18 @@ export function TimelineControl({
 
     const jumpToTimeRange = (days: number) => {
         const now = new Date();
-        const targetTime = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+        const startTime = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+        const endTime = now;
 
-        // 确保目标时间在范围内
-        if (targetTime >= minDate && targetTime <= maxDate) {
-            onTimeChange(targetTime);
-        } else if (targetTime < minDate) {
-            onTimeChange(minDate);
-        } else {
-            onTimeChange(maxDate);
-        }
+        // 确保时间范围在数据范围内
+        const clampedStart = startTime < minDate ? minDate : startTime;
+        const clampedEnd = endTime > maxDate ? maxDate : endTime;
+
+        onTimeRangeChange([clampedStart, clampedEnd]);
     };
+
+    // 计算与当前时间范围重合的标记数量
+    const overlappingMarkersCount = markers.filter(marker => isMarkerOverlapping(marker, timeRange)).length;
 
     return (
         <div className="p-4 space-y-3">
@@ -238,24 +239,27 @@ export function TimelineControl({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground"/>
-                        <span className="text-sm font-medium">{formatDate(currentTime)}</span>
+                        <span className="text-sm font-medium">
+                            {formatDate(timeRange[0])} - {formatDate(timeRange[1])}
+                        </span>
                     </div>
                     <div className="flex items-center gap-2">
                         <Badge variant="secondary" className="text-xs">
                             {granularity}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
-                            {markers.filter(marker => isMarkerActive(marker, currentTime)).length} 个标记
+                            {overlappingMarkersCount} 个标记
                         </Badge>
                     </div>
                 </div>
 
                 <Slider
-                    value={timeRange}
+                    value={sliderRange}
                     onValueChange={handleTimeSliderChange}
                     max={100}
                     step={0.1}
                     className="w-full"
+                    minStepsBetweenThumbs={1}
                 />
 
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -271,8 +275,8 @@ export function TimelineControl({
                         size="icon"
                         variant="outline"
                         className="h-9 w-9"
-                        onClick={stepBackward}
-                        disabled={currentTime <= minDate}
+                        onClick={moveRangeBackward}
+                        disabled={timeRange[0] <= minDate}
                     >
                         <SkipBack className="h-4 w-4"/>
                     </Button>
@@ -290,8 +294,8 @@ export function TimelineControl({
                         size="icon"
                         variant="outline"
                         className="h-9 w-9"
-                        onClick={stepForward}
-                        disabled={currentTime >= maxDate}
+                        onClick={moveRangeForward}
+                        disabled={timeRange[1] >= maxDate}
                     >
                         <SkipForward className="h-4 w-4"/>
                     </Button>
@@ -363,17 +367,9 @@ export function TimelineControl({
                                     variant="outline"
                                     size="sm"
                                     className="w-full justify-start"
-                                    onClick={() => onTimeChange(minDate)}
+                                    onClick={() => onTimeRangeChange([minDate, maxDate])}
                                 >
-                                    最早时间
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="w-full justify-start"
-                                    onClick={() => onTimeChange(maxDate)}
-                                >
-                                    最晚时间
+                                    全部时间
                                 </Button>
                             </div>
                         </div>
