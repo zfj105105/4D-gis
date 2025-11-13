@@ -19,3 +19,8 @@ yarn-error.log*
 /4D-gis-app/public/
 
 *.pbf
+
+#build
+**/build/
+**/android/
+**/ios/
