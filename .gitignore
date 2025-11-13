@@ -24,3 +24,6 @@ yarn-error.log*
 **/build/
 **/android/
 **/ios/
+/4D-gis-app/ios/
+/4D-gis-app/build/
+/4D-gis-app/android/
