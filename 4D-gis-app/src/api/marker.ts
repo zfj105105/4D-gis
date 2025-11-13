@@ -26,6 +26,25 @@ export const createMarker = async (markerData: MarkerCreateRequest): Promise<Mar
     };
 };
 
+export const deleteMarker = async (markerId: string): Promise<void> => {
+    await apiClient.delete(`/markers/${markerId}`);
+};
+
+export const updateMarker = async (markerId: string, markerData: MarkerUpdateRequest): Promise<Marker> => {
+    const response = await apiClient.put<Marker>(`/markers/${markerId}`, markerData);
+    const marker = response.data;
+
+    return {
+        ...marker,
+        time_start: new Date(marker.time_start),
+        time_end: marker.time_end ? new Date(marker.time_end) : undefined,
+        createdAt: marker.createdAt ? new Date(marker.createdAt) : undefined,
+        updatedAt: marker.updatedAt ? new Date(marker.updatedAt) : undefined,
+    };
+};
+
+
+
 export interface MarkerResponse {
     data?: Marker[];
     total?: number;
@@ -46,6 +65,22 @@ export interface MarkerCreateRequest {
     time_start: Date;
     title: string;
     typeId: string;
+    visibility?: Visibility;
+    [property: string]: any;
+}
+
+/**
+ * MarkerUpdateRequest
+ */
+export interface MarkerUpdateRequest {
+    altitude?: number;
+    description?: string;
+    latitude?: number;
+    longitude?: number;
+    time_end?: Date;
+    time_start?: Date;
+    title?: string;
+    typeId?: string;
     visibility?: Visibility;
     [property: string]: any;
 }

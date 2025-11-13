@@ -7,9 +7,18 @@ import {DrawerMenu} from './components/DrawerMenu';
 import {TimelineControl} from './components/TimelineControl';
 import {MarkerDetailsDialog} from './components/MarkerDetailsDialog';
 import {SharingDialog} from './components/SharingDialog';
-import {createMarker, fetchMarkers, Marker, MarkerCreateRequest, Visibility} from './api/marker';
+import {
+    createMarker,
+    deleteMarker,
+    fetchMarkers,
+    Marker,
+    MarkerCreateRequest,
+    MarkerUpdateRequest, updateMarker,
+    Visibility
+} from './api/marker';
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {CreateMarkerDialog} from "./components/CreateMarkerDialog";
+import {EditMarkerDialog} from "./components/EditMarkerDialog";
 
 
 export default function App() {
@@ -25,6 +34,7 @@ export default function App() {
     const [showMarkers, setShowMarkers] = useState(true);
     const [createMarkerDialogOpen, setCreateMarkerDialogOpen] = useState(false);
     const [createMarkerPosition, setCreateMarkerPosition] = useState<[number, number, number?] | null>(null);
+    const [editMarkerDialogOpen, setEditMarkerDialogOpen] = useState(false);
 
     const queryClient = useQueryClient();
 
@@ -48,6 +58,32 @@ export default function App() {
         onError: (error) => {
             console.error('创建标记失败:', error);
             alert('创建标记失败，请重试');
+        }
+    });
+
+    const deleteMarkerMutation = useMutation({
+        mutationFn: deleteMarker,
+        onSuccess: () => {
+            // 删除成功后刷新markers列表并关闭详情弹窗
+            queryClient.invalidateQueries({ queryKey: ['markers'] });
+            setSelectedMarker(null);
+        },
+        onError: (error) => {
+            console.error('删除标记失败:', error);
+            alert('删除标记失败，请重试');
+        }
+    });
+
+    const updateMarkerMutation = useMutation({
+        mutationFn: ({markerId, markerData}: {markerId: string, markerData: MarkerUpdateRequest}) =>
+            updateMarker(markerId, markerData),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['markers'] });
+            setEditMarkerDialogOpen(false);
+        },
+        onError: (error) => {
+            console.error('更新标记失败:', error);
+            alert('更新标记失败，请重试');
         }
     });
 
@@ -85,12 +121,19 @@ export default function App() {
     };
 
     const handleEdit = () => {
-        console.log('Edit marker:', selectedMarker);
+        setEditMarkerDialogOpen(true);
+    };
+
+    const handleUpdateMarker = (markerId: string, markerData: MarkerUpdateRequest) => {
+        updateMarkerMutation.mutate({markerId, markerData});
     };
 
     const handleDelete = () => {
-        console.log('Delete marker:', selectedMarker);
-        setSelectedMarker(null);
+        if (selectedMarker?.id) {
+            if (confirm('确定要删除这个标记吗？此操作无法撤销。')) {
+                deleteMarkerMutation.mutate(selectedMarker.id);
+            }
+        }
     };
 
     return (
@@ -171,6 +214,13 @@ export default function App() {
                 onOpenChange={setCreateMarkerDialogOpen}
                 onCreateMarker={handleCreateMarker}
                 position={createMarkerPosition}
+            />
+
+            <EditMarkerDialog
+                marker={selectedMarker}
+                open={editMarkerDialogOpen}
+                onOpenChange={setEditMarkerDialogOpen}
+                onUpdateMarker={handleUpdateMarker}
             />
         </div>
     );
