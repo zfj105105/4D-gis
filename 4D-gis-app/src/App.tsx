@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {Sheet, SheetContent, SheetTrigger} from './components/ui/sheet';
 import {Button} from './components/ui/button';
 import {Menu} from 'lucide-react';
@@ -7,6 +7,7 @@ import {DrawerMenu} from './components/DrawerMenu';
 import {TimelineControl} from './components/TimelineControl';
 import {MarkerDetailsDialog} from './components/MarkerDetailsDialog';
 import {SharingDialog} from './components/SharingDialog';
+import {SharedMarkerDialog} from './components/SharedMarkerDialog';
 import {
     createMarker,
     deleteMarker,
@@ -19,12 +20,15 @@ import {
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {CreateMarkerDialog} from "./components/CreateMarkerDialog";
 import {EditMarkerDialog} from "./components/EditMarkerDialog";
+import {parseSharedMarkerFromUrl, hasSharedMarker, clearSharedMarkerFromUrl} from './utils/shareUtils';
 
 
 export default function App() {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedMarker, setSelectedMarker] = useState<Marker | null>(null);
     const [sharingDialogOpen, setSharingDialogOpen] = useState(false);
+    const [sharedMarker, setSharedMarker] = useState<Marker | null>(null);
+    const [sharedMarkerDialogOpen, setSharedMarkerDialogOpen] = useState(false);
     // 改为时间范围状态
     const [timeRange, setTimeRange] = useState<[Date, Date]>([
         new Date('2020-09-01'),
@@ -42,8 +46,16 @@ export default function App() {
 
     const queryClient = useQueryClient();
 
-
-
+    // 检查是否有分享的标记
+    useEffect(() => {
+        if (hasSharedMarker()) {
+            const shared = parseSharedMarkerFromUrl();
+            if (shared) {
+                setSharedMarker(shared);
+                setSharedMarkerDialogOpen(true);
+            }
+        }
+    }, []);
 
     const {
         data: markers = []
@@ -51,6 +63,12 @@ export default function App() {
         queryKey: ['markers'],
         queryFn: fetchMarkers,
     });
+
+    // 创建一个包含分享标记的标记列表（用于显示）
+    const allMarkersToDisplay = [...markers];
+    if (sharedMarker && !markers.find(m => m.id === sharedMarker.id)) {
+        allMarkersToDisplay.push(sharedMarker);
+    }
 
     const createMarkerMutation = useMutation({
         mutationFn: createMarker,
@@ -101,7 +119,7 @@ export default function App() {
     };
 
     // 过滤在当前时间范围内的标记
-    const markersInTimeRange = markers.filter(marker => isMarkerInTimeRange(marker, timeRange));
+    const markersInTimeRange = allMarkersToDisplay.filter(marker => isMarkerInTimeRange(marker, timeRange));
 
     const handleMarkerClick = (marker: Marker) => {
         setSelectedMarker(marker);
@@ -157,6 +175,34 @@ export default function App() {
         }
     };
 
+    // 处理添加分享标记到个人标记
+    const handleAddSharedMarkerToMap = (marker: Marker) => {
+        // 这里可以调用创建标记的API来将分享的标记添加到用户的标记列表中
+        const createRequest: MarkerCreateRequest = {
+            title: `${marker.title} (分享)`,
+            description: marker.description,
+            latitude: marker.latitude,
+            longitude: marker.longitude,
+            altitude: marker.altitude,
+            time_start: marker.time_start,
+            time_end: marker.time_end,
+            typeId: marker.type?.typeId || '',
+            visibility: Visibility.Private
+        };
+
+        createMarkerMutation.mutate(createRequest);
+        clearSharedMarkerFromUrl();
+        setSharedMarker(null);
+    };
+
+    const handleSharedMarkerDialogClose = (open: boolean) => {
+        setSharedMarkerDialogOpen(open);
+        if (!open) {
+            // 如果用户关闭了分享标记对话框，清除URL参数但保留标记显示
+            clearSharedMarkerFromUrl();
+        }
+    };
+
     return (
         <div className="flex flex-col h-screen bg-background overflow-hidden">
             {/* Header */}
@@ -195,7 +241,7 @@ export default function App() {
                     activeFilters={activeFilters}
                     showBasemap={showBasemap}
                     showMarkers={showMarkers}
-                    totalMarkers={markers.length} // 传递总标记数量
+                    totalMarkers={allMarkersToDisplay.length} // 传递包含分享标记的总数量
                 />
             </div>
 
@@ -210,7 +256,7 @@ export default function App() {
                     onPlayingChange={setIsPlaying}
                     playbackSpeed={playbackSpeed}
                     onSpeedChange={handleSpeedChange}
-                    markers={markers}
+                    markers={allMarkersToDisplay}
                 />
             </div>
 
@@ -228,7 +274,15 @@ export default function App() {
             <SharingDialog
                 open={sharingDialogOpen}
                 onOpenChange={setSharingDialogOpen}
-                markerTitle={selectedMarker?.title || ''}
+                marker={selectedMarker}
+            />
+
+            {/* Shared Marker Dialog */}
+            <SharedMarkerDialog
+                marker={sharedMarker}
+                open={sharedMarkerDialogOpen}
+                onOpenChange={handleSharedMarkerDialogClose}
+                onAddToMap={handleAddSharedMarkerToMap}
             />
 
             <CreateMarkerDialog
