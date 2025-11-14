@@ -1,11 +1,14 @@
 import {Tabs, TabsContent, TabsList, TabsTrigger} from './ui/tabs';
-import {BarChart3, Eye, Layers, MapPin} from 'lucide-react';
+import {BarChart3, Eye, Layers, MapPin, LogOut, User} from 'lucide-react';
 import {Badge} from './ui/badge';
 import {Checkbox} from './ui/checkbox';
 import {Label} from './ui/label';
 import {ScrollArea} from './ui/scroll-area';
 import {Separator} from './ui/separator';
+import {Button} from './ui/button';
 import type {Marker} from '../api/marker';
+import {authUtils} from '../api/auth';
+import {useState, useEffect} from 'react';
 
 interface DrawerMenuProps {
     markers: Marker[];
@@ -16,6 +19,7 @@ interface DrawerMenuProps {
     onShowBasemapChange: (show: boolean) => void;
     showMarkers?: boolean;
     onShowMarkersChange: (show: boolean) => void;
+    onLogout?: () => void;
 }
 
 export function DrawerMenu({
@@ -26,8 +30,16 @@ export function DrawerMenu({
                                showBasemap,
                                onShowBasemapChange,
                                showMarkers,
-                               onShowMarkersChange
+                               onShowMarkersChange,
+                               onLogout
                            }: DrawerMenuProps) {
+    const [currentUser, setCurrentUser] = useState<any>(null);
+
+    useEffect(() => {
+        const user = authUtils.getCurrentUser();
+        setCurrentUser(user);
+    }, []);
+
     const categories = Array.from(new Set(markers.map(m => m.type?.name || 'Uncategorized')));
 
     const toggleFilter = (category: string) => {
@@ -237,6 +249,18 @@ export function DrawerMenu({
                     </ScrollArea>
                 </TabsContent>
             </Tabs>
+
+            <div className="p-4 border-t flex-shrink-0">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <User className="h-5 w-5 text-muted-foreground"/>
+                        <span className="text-sm text-muted-foreground">{currentUser?.username || 'User Name'}</span>
+                    </div>
+                    <Button variant="outline" size="icon" onClick={onLogout}>
+                        <LogOut className="h-4 w-4"/>
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 }

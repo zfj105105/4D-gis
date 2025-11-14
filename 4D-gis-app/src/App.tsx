@@ -21,6 +21,8 @@ import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {CreateMarkerDialog} from "./components/CreateMarkerDialog";
 import {EditMarkerDialog} from "./components/EditMarkerDialog";
 import {parseSharedMarkerFromUrl, hasSharedMarker, clearSharedMarkerFromUrl} from './utils/shareUtils';
+import {AuthPage} from "./components/AuthPage";
+import {authUtils} from "./api/auth";
 
 
 export default function App() {
@@ -43,8 +45,33 @@ export default function App() {
     const [createMarkerDialogOpen, setCreateMarkerDialogOpen] = useState(false);
     const [createMarkerPosition, setCreateMarkerPosition] = useState<[number, number, number?] | null>(null);
     const [editMarkerDialogOpen, setEditMarkerDialogOpen] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
     const queryClient = useQueryClient();
+
+    // 检查初始认证状态
+    useEffect(() => {
+        const checkAuth = () => {
+            const isAuth = authUtils.isAuthenticated();
+            setIsAuthenticated(isAuth);
+            setIsCheckingAuth(false);
+        };
+
+        checkAuth();
+    }, []);
+
+    // 处理登录成功
+    const handleLogin = () => {
+        setIsAuthenticated(true);
+    };
+
+    // 处理登出
+    const handleLogout = () => {
+        authUtils.logout();
+        setIsAuthenticated(false);
+        queryClient.clear(); // 清除所有缓存数据
+    };
 
     // 检查是否有分享的标记
     useEffect(() => {
@@ -202,7 +229,12 @@ export default function App() {
             clearSharedMarkerFromUrl();
         }
     };
-
+    if (isCheckingAuth) {
+        return <div className="flex items-center justify-center h-screen">加载中...</div>;
+    }
+    if (!isAuthenticated) {
+        return <AuthPage onLogin={handleLogin} />;
+    }
     return (
         <div className="flex flex-col h-screen bg-background overflow-hidden">
             {/* Header */}
@@ -223,6 +255,7 @@ export default function App() {
                             onShowBasemapChange={setShowBasemap}
                             showMarkers={showMarkers}
                             onShowMarkersChange={setShowMarkers}
+                            onLogout={handleLogout}
                         />
                     </SheetContent>
                 </Sheet>
