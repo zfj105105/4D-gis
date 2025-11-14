@@ -1,6 +1,5 @@
 
 /*
-一个标记点可添加多个标签的版本
  Navicat Premium Dump SQL
 
  Source Server         : 111111
@@ -13,7 +12,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 14/11/2025 14:04:02
+ Date: 06/11/2025 16:14:08
 */
 
 SET NAMES utf8mb4;
@@ -82,23 +81,6 @@ CREATE TABLE `marker_collaborators`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for marker_tags
--- ----------------------------
-DROP TABLE IF EXISTS `marker_tags`;
-CREATE TABLE `marker_tags`  (
-  `marker_id` bigint UNSIGNED NOT NULL COMMENT '关联的标记点ID',
-  `tag_id` bigint UNSIGNED NOT NULL COMMENT '关联的标签ID',
-  PRIMARY KEY (`marker_id`, `tag_id`) USING BTREE,
-  INDEX `tag_id`(`tag_id` ASC) USING BTREE,
-  CONSTRAINT `marker_tags_ibfk_1` FOREIGN KEY (`marker_id`) REFERENCES `markers` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `marker_tags_ibfk_2` FOREIGN KEY (`tag_id`) REFERENCES `tags` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '标记与标签的多对多关系表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of marker_tags
--- ----------------------------
-
--- ----------------------------
 -- Table structure for marker_types
 -- ----------------------------
 DROP TABLE IF EXISTS `marker_types`;
@@ -149,25 +131,6 @@ CREATE TABLE `markers`  (
 
 -- ----------------------------
 -- Records of markers
--- ----------------------------
-
--- ----------------------------
--- Table structure for tags
--- ----------------------------
-DROP TABLE IF EXISTS `tags`;
-CREATE TABLE `tags`  (
-  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
-  `tag_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标签名称, 如“超市”、“停车场”',
-  `creator_id` bigint UNSIGNED NOT NULL COMMENT '创建者ID',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_tag_name`(`tag_name` ASC) USING BTREE COMMENT '确保标签名称不重复',
-  INDEX `creator_id`(`creator_id` ASC) USING BTREE,
-  CONSTRAINT `tags_ibfk_1` FOREIGN KEY (`creator_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '标签定义表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of tags
 -- ----------------------------
 
 -- ----------------------------
