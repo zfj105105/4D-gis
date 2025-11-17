@@ -68,19 +68,51 @@ public class UserServiceImpl implements UserService
     public LoginResponse login(LoginRequest req)
     {
         String identity = req.getIdentity();
+        if (identity == null)
+        {
+            throw new RuntimeException("USER_NOT_FOUND");
+        }
 
-        // Try to find user by email, then phone, then username
-        User user = userRepository.findByEmail(identity)
-                      .or(() -> userRepository.findByPhone(identity))
-                      .or(() -> userRepository.findByUsername(identity))
-                      .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+        identity = identity.trim();
+        log.debug("Attempting login for identity='{}'", identity);
+
+        // Try to find user by email, then phone, then username — explicit checks help debugging
+        User user = userRepository.findByEmail(identity).orElse(null);
+        if (user != null)
+        {
+            log.debug("Found user by email: id={}", user.getId());
+        }
+
+        if (user == null)
+        {
+            user = userRepository.findByPhone(identity).orElse(null);
+            if (user != null)
+            {
+                log.debug("Found user by phone: id={}", user.getId());
+            }
+        }
+
+        if (user == null)
+        {
+            user = userRepository.findByUsername(identity).orElse(null);
+            if (user != null)
+            {
+                log.debug("Found user by username: id={}", user.getId());
+            }
+        }
+
+        if (user == null)
+        {
+            log.debug("User not found for identity='{}'", identity);
+            throw new RuntimeException("USER_NOT_FOUND");
+        }
 
         if (!encoder.matches(req.getPassword(), user.getPasswordHash()))
         {
             throw new RuntimeException("INVALID_CREDENTIALS");
         }
-
         String token = jwtUtil.generateToken(user.getId());
         return new LoginResponse(token, "登录成功");
     }
 }
+
