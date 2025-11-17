@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:mysql://locohost:3306/gis?useSSL=true&serverTimezone=UTC
+    username: gisuser
+    password: 123456
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update  # 生产环境禁止自动建表
+
+logging:
+  level:
+    root: WARN
