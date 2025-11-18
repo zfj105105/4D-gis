@@ -9,11 +9,14 @@ import com.project.gis.repository.UserRepository;
 import com.project.gis.security.JwtUtil;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 public class UserServiceImpl implements UserService
 {
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -111,8 +114,8 @@ public class UserServiceImpl implements UserService
         {
             throw new RuntimeException("INVALID_CREDENTIALS");
         }
+
         String token = jwtUtil.generateToken(user.getId());
         return new LoginResponse(token, "登录成功");
     }
 }
-
