@@ -1,13 +1,14 @@
 import {useState, useEffect} from 'react';
 import {Sheet, SheetContent, SheetTrigger} from './components/ui/sheet';
 import {Button} from './components/ui/button';
-import {Menu} from 'lucide-react';
+import {Menu, Users} from 'lucide-react';
 import {MapView} from './components/MapView';
 import {DrawerMenu} from './components/DrawerMenu';
 import {TimelineControl} from './components/TimelineControl';
 import {MarkerDetailsDialog} from './components/MarkerDetailsDialog';
 import {SharingDialog} from './components/SharingDialog';
 import {SharedMarkerDialog} from './components/SharedMarkerDialog';
+import {FriendsDialog} from './components/FriendsDialog';
 import {
     createMarker,
     deleteMarker,
@@ -31,6 +32,7 @@ export default function App() {
     const [sharingDialogOpen, setSharingDialogOpen] = useState(false);
     const [sharedMarker, setSharedMarker] = useState<Marker | null>(null);
     const [sharedMarkerDialogOpen, setSharedMarkerDialogOpen] = useState(false);
+    const [friendsDialogOpen, setFriendsDialogOpen] = useState(false);
     // 改为时间范围状态
     const [timeRange, setTimeRange] = useState<[Date, Date]>([
         new Date('2020-09-01'),
@@ -260,8 +262,15 @@ export default function App() {
                     </SheetContent>
                 </Sheet>
                 <h1 className="flex-1 text-center">Map Application</h1>
-                <div className="w-10"/>
-                {/* Spacer for centering */}
+                <div className="flex items-center space-x-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setFriendsDialogOpen(true)}
+                    >
+                        <Users className="h-5 w-5"/>
+                    </Button>
+                </div>
             </div>
 
             {/* Main Map View */}
@@ -330,6 +339,12 @@ export default function App() {
                 open={editMarkerDialogOpen}
                 onOpenChange={setEditMarkerDialogOpen}
                 onUpdateMarker={handleUpdateMarker}
+            />
+
+            {/* Friends Dialog */}
+            <FriendsDialog
+                open={friendsDialogOpen}
+                onOpenChange={setFriendsDialogOpen}
             />
         </div>
     );
