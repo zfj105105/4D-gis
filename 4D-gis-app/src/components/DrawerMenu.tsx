@@ -1,5 +1,5 @@
 import {Tabs, TabsContent, TabsList, TabsTrigger} from './ui/tabs';
-import {BarChart3, Eye, Layers, MapPin, LogOut, User} from 'lucide-react';
+import {BarChart3, Eye, Layers, MapPin, LogOut, User, CloudOff} from 'lucide-react';
 import {Badge} from './ui/badge';
 import {Checkbox} from './ui/checkbox';
 import {Label} from './ui/label';
@@ -9,6 +9,8 @@ import {Button} from './ui/button';
 import type {Marker} from '../api/marker';
 import {authUtils} from '../api/auth';
 import {useState, useEffect} from 'react';
+import {OfflineMarkersPanel} from './OfflineMarkersPanel';
+import {OfflineMarker} from '../utils/offlineStorage';
 
 interface DrawerMenuProps {
     markers: Marker[];
@@ -20,6 +22,11 @@ interface DrawerMenuProps {
     showMarkers?: boolean;
     onShowMarkersChange: (show: boolean) => void;
     onLogout?: () => void;
+    offlineMarkers?: OfflineMarker[];
+    onSyncOfflineMarker?: (marker: OfflineMarker) => void;
+    onSyncAllOfflineMarkers?: () => void;
+    onDeleteOfflineMarker?: (localId: string) => void;
+    isOnline?: boolean;
 }
 
 export function DrawerMenu({
@@ -31,7 +38,12 @@ export function DrawerMenu({
                                onShowBasemapChange,
                                showMarkers,
                                onShowMarkersChange,
-                               onLogout
+                               onLogout,
+                               offlineMarkers = [],
+                               onSyncOfflineMarker,
+                               onSyncAllOfflineMarkers,
+                               onDeleteOfflineMarker,
+                               isOnline = true
                            }: DrawerMenuProps) {
     const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -77,6 +89,16 @@ export function DrawerMenu({
                                  className="text-xs flex-1 min-w-0 flex items-center justify-center gap-1">
                         <MapPin className="h-4 w-4"/>
                         <span className="truncate">Markers</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="offline"
+                                 className="text-xs flex-1 min-w-0 flex items-center justify-center gap-1 relative">
+                        <CloudOff className="h-4 w-4"/>
+                        <span className="truncate">Offline</span>
+                        {offlineMarkers.length > 0 && (
+                            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                                {offlineMarkers.length}
+                            </Badge>
+                        )}
                     </TabsTrigger>
                     <TabsTrigger value="stats"
                                  className="text-xs flex-1 min-w-0 flex items-center justify-center gap-1">
@@ -194,6 +216,16 @@ export function DrawerMenu({
                             </div>
                         </div>
                     </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="offline" className="flex-1 overflow-hidden">
+                    <OfflineMarkersPanel
+                        offlineMarkers={offlineMarkers}
+                        onSyncMarker={onSyncOfflineMarker || (() => {})}
+                        onSyncAll={onSyncAllOfflineMarkers || (() => {})}
+                        onDeleteOfflineMarker={onDeleteOfflineMarker || (() => {})}
+                        isOnline={isOnline}
+                    />
                 </TabsContent>
 
                 <TabsContent value="stats" className="flex-1 overflow-hidden">

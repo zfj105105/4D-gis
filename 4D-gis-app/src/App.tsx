@@ -24,6 +24,15 @@ import {EditMarkerDialog} from "./components/EditMarkerDialog";
 import {parseSharedMarkerFromUrl, hasSharedMarker, clearSharedMarkerFromUrl} from './utils/shareUtils';
 import {AuthPage} from "./components/AuthPage";
 import {authUtils} from "./api/auth";
+import {useNetworkStatus} from "./hooks/useNetworkStatus";
+import {
+    getOfflineMarkers,
+    saveOfflineMarker,
+    removeOfflineMarker,
+    removeMultipleOfflineMarkers,
+    OfflineMarker,
+    isMobile
+} from './utils/offlineStorage';
 
 
 export default function App() {
@@ -49,14 +58,36 @@ export default function App() {
     const [editMarkerDialogOpen, setEditMarkerDialogOpen] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [offlineMarkers, setOfflineMarkers] = useState<OfflineMarker[]>([]);
 
+    const {isOnline} = useNetworkStatus();
     const queryClient = useQueryClient();
 
     // 检查初始认证状态
     useEffect(() => {
         const checkAuth = () => {
             const isAuth = authUtils.isAuthenticated();
-            setIsAuthenticated(isAuth);
+
+            // 开发模式：如果没有后端，自动设置一个测试token
+            if (!isAuth) {
+                // 自动创建一个测试用户登录
+                const devMode = false; // 设置为 false 可以恢复正常登录流程
+                if (devMode) {
+                    authUtils.saveAuthData({
+                        expiresIn: 0,
+                        token: 'dev-test-token-' + Date.now(),
+                        user: {
+                            userId: 'dev-user-1',
+                            username: '测试用户'
+                        }
+                    });
+                    setIsAuthenticated(true);
+                } else {
+                    setIsAuthenticated(false);
+                }
+            } else {
+                setIsAuthenticated(isAuth);
+            }
             setIsCheckingAuth(false);
         };
 
@@ -85,6 +116,27 @@ export default function App() {
             }
         }
     }, []);
+
+    // 加载离线标记
+    useEffect(() => {
+        const loadOfflineMarkers = async () => {
+            if (isMobile()) {
+                const markers = await getOfflineMarkers();
+                setOfflineMarkers(markers);
+            }
+        };
+        loadOfflineMarkers();
+    }, []);
+
+    // 当网络恢复时自动上传离线标记
+    useEffect(() => {
+        const syncOfflineMarkers = async () => {
+            if (isOnline && offlineMarkers.length > 0 && isMobile()) {
+                await handleSyncAllOfflineMarkers();
+            }
+        };
+        syncOfflineMarkers();
+    }, [isOnline]);
 
     const {
         data: markers = []
@@ -168,7 +220,7 @@ export default function App() {
         setTimeRange(range);
     };
 
-    const handleCreateMarker = (markerData: any) => {
+    const handleCreateMarker = async (markerData: any) => {
         const createRequest: MarkerCreateRequest = {
             title: markerData.title,
             description: markerData.description,
@@ -181,27 +233,139 @@ export default function App() {
             visibility: markerData.visibility
         };
 
-        createMarkerMutation.mutate(createRequest);
+        // 检查是否在移动端且离线
+        if (isMobile() && !isOnline) {
+            try {
+                await saveOfflineMarker(createRequest);
+                const updatedOfflineMarkers = await getOfflineMarkers();
+                setOfflineMarkers(updatedOfflineMarkers);
+                setCreateMarkerDialogOpen(false);
+                alert('标记已保存到本地，将在网络恢复时自动上传');
+            } catch (error) {
+                console.error('保存离线标记失败:', error);
+                alert('保存离线标记失败，请重试');
+            }
+        } else {
+            // 在线时直接上传
+            createMarkerMutation.mutate(createRequest);
+        }
     };
 
+    // 同步单个离线标记
+    const handleSyncOfflineMarker = async (marker: OfflineMarker) => {
+        if (!isOnline) {
+            alert('当前处于离线状态，无法上传标记');
+            return;
+        }
+
+        try {
+            const createRequest: MarkerCreateRequest = {
+                title: marker.title,
+                description: marker.description,
+                latitude: marker.latitude,
+                longitude: marker.longitude,
+                altitude: marker.altitude,
+                time_start: marker.time_start,
+                time_end: marker.time_end,
+                typeId: marker.typeId,
+                visibility: marker.visibility
+            };
+
+            await createMarker(createRequest);
+            await removeOfflineMarker(marker.localId);
+            const updatedOfflineMarkers = await getOfflineMarkers();
+            setOfflineMarkers(updatedOfflineMarkers);
+            queryClient.invalidateQueries({ queryKey: ['markers'] });
+            alert('标记上传成功');
+        } catch (error) {
+            console.error('上传离线标记失败:', error);
+            alert('上传失败，请稍后重试');
+        }
+    };
+
+    // 同步所有离线标记
+    const handleSyncAllOfflineMarkers = async () => {
+        if (!isOnline) {
+            alert('当前处于离线状态，无法上传标记');
+            return;
+        }
+
+        if (offlineMarkers.length === 0) {
+            return;
+        }
+
+        try {
+            const uploadPromises = offlineMarkers.map(marker => {
+                const createRequest: MarkerCreateRequest = {
+                    title: marker.title,
+                    description: marker.description,
+                    latitude: marker.latitude,
+                    longitude: marker.longitude,
+                    altitude: marker.altitude,
+                    time_start: marker.time_start,
+                    time_end: marker.time_end,
+                    typeId: marker.typeId,
+                    visibility: marker.visibility
+                };
+                return createMarker(createRequest);
+            });
+
+            await Promise.all(uploadPromises);
+
+            const localIds = offlineMarkers.map(m => m.localId);
+            await removeMultipleOfflineMarkers(localIds);
+
+            setOfflineMarkers([]);
+            queryClient.invalidateQueries({ queryKey: ['markers'] });
+            alert(`成功上传 ${offlineMarkers.length} 个标记`);
+        } catch (error) {
+            console.error('批量上传离线标记失败:', error);
+            alert('部分标记上传失败，请稍后重试');
+            // 重新加载离线标记以反映实际状态
+            const updatedOfflineMarkers = await getOfflineMarkers();
+            setOfflineMarkers(updatedOfflineMarkers);
+        }
+    };
+
+    // 删除离线标记
+    const handleDeleteOfflineMarker = async (localId: string) => {
+        if (confirm('确定要删除这个离线标记吗？')) {
+            try {
+                await removeOfflineMarker(localId);
+                const updatedOfflineMarkers = await getOfflineMarkers();
+                setOfflineMarkers(updatedOfflineMarkers);
+            } catch (error) {
+                console.error('删除离线标记失败:', error);
+                alert('删除失败，请重试');
+            }
+        }
+    };
+
+    // 处理编辑标记
+    const handleEdit = () => {
+        if (selectedMarker) {
+            setEditMarkerDialogOpen(true);
+        }
+    };
+
+    // 处理分享标记
     const handleShare = () => {
         setSharingDialogOpen(true);
     };
 
-    const handleEdit = () => {
-        setEditMarkerDialogOpen(true);
-    };
-
-    const handleUpdateMarker = (markerId: string, markerData: MarkerUpdateRequest) => {
-        updateMarkerMutation.mutate({markerId, markerData});
-    };
-
+    // 处理删除标记
     const handleDelete = () => {
-        if (selectedMarker?.id) {
-            if (confirm('确定要删除这个标记吗？此操作无法撤销。')) {
-                deleteMarkerMutation.mutate(selectedMarker.id);
-            }
+        if (selectedMarker && confirm('确定要删除这个标记吗？')) {
+            deleteMarkerMutation.mutate(selectedMarker.id);
         }
+    };
+
+    // 处理更新标记
+    const handleUpdateMarker = (markerId: string, markerData: MarkerUpdateRequest) => {
+        updateMarkerMutation.mutate({
+            markerId,
+            markerData
+        });
     };
 
     // 处理添加分享标记到个人标记
@@ -249,7 +413,7 @@ export default function App() {
                     </SheetTrigger>
                     <SheetContent side="left" className="w-[85vw] sm:w-96 p-0 h-screen">
                         <DrawerMenu
-                            markers={markersInTimeRange} // 只显示在时间范围内的标记
+                            markers={markersInTimeRange}
                             onMarkerSelect={handleMarkerClick}
                             activeFilters={activeFilters}
                             onFiltersChange={setActiveFilters}
@@ -258,6 +422,11 @@ export default function App() {
                             showMarkers={showMarkers}
                             onShowMarkersChange={setShowMarkers}
                             onLogout={handleLogout}
+                            offlineMarkers={offlineMarkers}
+                            onSyncOfflineMarker={handleSyncOfflineMarker}
+                            onSyncAllOfflineMarkers={handleSyncAllOfflineMarkers}
+                            onDeleteOfflineMarker={handleDeleteOfflineMarker}
+                            isOnline={isOnline}
                         />
                     </SheetContent>
                 </Sheet>

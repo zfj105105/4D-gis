@@ -8,7 +8,7 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from './u
 import {Separator} from './ui/separator';
 import {ScrollArea} from './ui/scroll-area';
 import {useQuery} from '@tanstack/react-query';
-import {fetchMarkerTypes} from '../api/markerTypes';
+import {fetchMarkerTypesWithFallback} from '../api/markerTypes';
 import {Clock, Eye, FileText, MapPin, Plus, Tag, Type, X} from 'lucide-react';
 import {Visibility} from "../api/marker";
 
@@ -48,10 +48,12 @@ export function CreateMarkerDialog({
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
 
-    // 获取标记类型数据
+    // 获取标记类型数据 - 使用带备用方案的版本
     const { data: markerTypes = [], isLoading: isLoadingTypes } = useQuery({
         queryKey: ['markerTypes'],
-        queryFn: fetchMarkerTypes,
+        queryFn: fetchMarkerTypesWithFallback,
+        staleTime: 5 * 60 * 1000, // 5分钟内使用缓存
+        retry: 1, // 只重试一次，快速失败并使用本地数据
     });
 
     const handleSubmit = (e: React.FormEvent) => {

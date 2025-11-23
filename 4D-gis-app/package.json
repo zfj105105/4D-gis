@@ -8,6 +8,7 @@
     "@capacitor/geolocation": "^7.1.5",
     "@capacitor/ios": "^7.4.4",
     "@capacitor/network": "^7.0.2",
+    "@capacitor/preferences": "^7.0.2",
     "@mapbox/vector-tile": "^2.0.4",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
