@@ -5,9 +5,9 @@ import { Input } from './ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
-import { 
+import { ScrollArea } from './ui/scroll-area';
+import {
   Users, 
   UserPlus, 
   Search, 
@@ -209,9 +209,9 @@ export function FriendsDialog({ open, onOpenChange }: FriendsDialogProps) {
           </TabsList>
 
           {/* Friends List Tab */}
-          <TabsContent value="friends" className="flex-1 overflow-hidden mt-0">
-            <ScrollArea className="h-full">
-              <div className="px-6 py-4 space-y-2">
+          <TabsContent value="friends" className="flex-1 overflow-hidden mt-4 data-[state=active]:flex data-[state=active]:flex-col">
+            <ScrollArea className="flex-1 h-full">
+              <div className="px-6 pb-6 space-y-2">
                 {friendsLoading ? (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">Loading...</p>
@@ -266,9 +266,9 @@ export function FriendsDialog({ open, onOpenChange }: FriendsDialogProps) {
           </TabsContent>
 
           {/* Friend Requests Tab */}
-          <TabsContent value="requests" className="flex-1 overflow-hidden mt-0">
-            <ScrollArea className="h-full">
-              <div className="px-6 py-4 space-y-2">
+          <TabsContent value="requests" className="flex-1 overflow-hidden mt-4 data-[state=active]:flex data-[state=active]:flex-col">
+            <ScrollArea className="flex-1 h-full">
+              <div className="px-6 pb-6 space-y-2">
                 {requestsLoading ? (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">Loading...</p>
@@ -341,9 +341,9 @@ export function FriendsDialog({ open, onOpenChange }: FriendsDialogProps) {
           </TabsContent>
 
           {/* Add Friends Tab */}
-          <TabsContent value="add" className="flex-1 overflow-hidden mt-0">
-            <ScrollArea className="h-full">
-              <div className="px-6 py-4 space-y-4">
+          <TabsContent value="add" className="flex-1 overflow-hidden mt-4 data-[state=active]:flex data-[state=active]:flex-col">
+            <ScrollArea className="flex-1 h-full">
+              <div className="px-6 pb-6 space-y-4">
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
                     Search by username or email
