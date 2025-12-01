@@ -1,0 +1,20 @@
+logging:
+  level:
+    com.project.gis.security: DEBUG
+spring:
+	datasource:
+		# MySQL connection used by the application. Adjust username/password as needed.
+		url: jdbc:mysql://localhost:3306/gis?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+		username: root
+		password: 123456
+
+	jpa:
+		hibernate:
+			ddl-auto: update   # 开发环境使用 update；生产请改为 validate 或移除
+		properties:
+			hibernate:
+				dialect: org.hibernate.spatial.dialect.mysql.MySQL8SpatialDialect
+
+app:
+	jwt-secret: QIHEoEh1hqT2HfbfwbWhbbVIY8ZxYlPRWfNJh7igy6+DymNLYuJFdKe682TkKXLAndqTZJN66JG2tXnQqfbC9CNIJNqxNOWrUjScA66U7RH+UX5sbTTYpnwUkMIQ2OZLB6S04NsRYhVAqWXJakgvW0Qy6q9kPb5Omn/gLvP+bys=
+	jwt-expiration-ms: 3600000
