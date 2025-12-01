@@ -4,9 +4,9 @@ logging:
 spring:
 	datasource:
 		# MySQL connection used by the application. Adjust username/password as needed.
-		url: jdbc:mysql://101.37.241.111:3306/gis?createDatabaseIfNotExist=true&useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+		url: jdbc:mysql://localhost:3306/gis?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 		username: root
-		password: 12345678
+		password: 123456
 
 	jpa:
 		hibernate:
@@ -17,4 +17,5 @@ spring:
 
 app:
 	jwt-secret: QIHEoEh1hqT2HfbfwbWhbbVIY8ZxYlPRWfNJh7igy6+DymNLYuJFdKe682TkKXLAndqTZJN66JG2tXnQqfbC9CNIJNqxNOWrUjScA66U7RH+UX5sbTTYpnwUkMIQ2OZLB6S04NsRYhVAqWXJakgvW0Qy6q9kPb5Omn/gLvP+bys=
+
 	jwt-expiration-ms: 3600000
