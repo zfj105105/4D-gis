@@ -1,0 +1,150 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model attachments {
+  id          BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  marker_id   BigInt   @db.UnsignedBigInt
+  file_name   String   @db.VarChar(255)
+  file_path   String   @db.VarChar(500)
+  file_type   String?  @db.VarChar(50)
+  uploader_id BigInt   @db.UnsignedBigInt
+  uploaded_at DateTime @default(now()) @db.Timestamp(0)
+  markers     markers  @relation(fields: [marker_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "attachments_ibfk_1")
+  users       users    @relation(fields: [uploader_id], references: [id], onUpdate: Restrict, map: "attachments_ibfk_2")
+
+  @@index([marker_id], map: "idx_marker_id")
+  @@index([uploader_id], map: "uploader_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model friend_requests {
+  id                                        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  requester_id                              BigInt   @db.UnsignedBigInt
+  recipient_id                              BigInt   @db.UnsignedBigInt
+  created_at                                DateTime @default(now()) @db.Timestamp(0)
+  users_friend_requests_requester_idTousers users    @relation("friend_requests_requester_idTousers", fields: [requester_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "friend_requests_ibfk_1")
+  users_friend_requests_recipient_idTousers users    @relation("friend_requests_recipient_idTousers", fields: [recipient_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "friend_requests_ibfk_2")
+
+  @@unique([requester_id, recipient_id], map: "UKps9kptamct3ij6nxh0efavr5p")
+  @@unique([requester_id, recipient_id], map: "uk_request")
+  @@index([recipient_id], map: "idx_recipient")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model friendships {
+  user1_id                          BigInt   @db.UnsignedBigInt
+  user2_id                          BigInt   @db.UnsignedBigInt
+  created_at                        DateTime @default(now()) @db.Timestamp(0)
+  users_friendships_user1_idTousers users    @relation("friendships_user1_idTousers", fields: [user1_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "friendships_ibfk_1")
+  users_friendships_user2_idTousers users    @relation("friendships_user2_idTousers", fields: [user2_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "friendships_ibfk_2")
+
+  @@id([user1_id, user2_id])
+  @@index([user2_id], map: "idx_user2")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model marker_collaborators {
+  marker_id  BigInt   @db.UnsignedBigInt
+  user_id    BigInt   @db.UnsignedBigInt
+  permission String   @db.VarChar(255)
+  granted_at DateTime @default(now()) @db.Timestamp(0)
+  markers    markers  @relation(fields: [marker_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "marker_collaborators_ibfk_1")
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "marker_collaborators_ibfk_2")
+
+  @@id([marker_id, user_id])
+  @@index([user_id], map: "user_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model marker_tags {
+  marker_id BigInt  @db.UnsignedBigInt
+  tag_id    BigInt  @db.UnsignedBigInt
+  markers   markers @relation(fields: [marker_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "marker_tags_ibfk_1")
+  tags      tags    @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "marker_tags_ibfk_2")
+
+  @@id([marker_id, tag_id])
+  @@index([tag_id], map: "tag_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model marker_types {
+  id            BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  type_name     String    @unique(map: "uk_type_name") @db.VarChar(100)
+  icon_url      String?   @db.VarChar(255)
+  default_color String?   @db.VarChar(7)
+  creator_id    BigInt    @db.UnsignedBigInt
+  created_at    DateTime  @default(now()) @db.Timestamp(0)
+  markers       markers[]
+
+  @@index([creator_id], map: "idx_creator_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model markers {
+  id                              BigInt                 @id @default(autoincrement()) @db.UnsignedBigInt
+  title                           String                 @db.VarChar(255)
+  description                     String?                @db.Text
+  location                        Unsupported("point")
+  altitude                        Float?
+  start_time                      DateTime               @db.DateTime(0)
+  end_time                        DateTime?              @db.DateTime(0)
+  marker_type_id                  BigInt                 @db.UnsignedBigInt
+  creator_id                      BigInt                 @db.UnsignedBigInt
+  owner_id                        BigInt                 @db.UnsignedBigInt
+  visibility                      String                 @db.VarChar(255)
+  created_at                      DateTime               @default(now()) @db.Timestamp(0)
+  updated_at                      DateTime               @default(now()) @db.Timestamp(0)
+  attachments                     attachments[]
+  marker_collaborators            marker_collaborators[]
+  marker_tags                     marker_tags[]
+  marker_types                    marker_types           @relation(fields: [marker_type_id], references: [id], onUpdate: Restrict, map: "markers_ibfk_1")
+  users_markers_creator_idTousers users                  @relation("markers_creator_idTousers", fields: [creator_id], references: [id], onUpdate: Restrict, map: "markers_ibfk_2")
+  users_markers_owner_idTousers   users                  @relation("markers_owner_idTousers", fields: [owner_id], references: [id], onUpdate: Restrict, map: "markers_ibfk_3")
+
+  @@index([creator_id], map: "idx_creator_id")
+  @@index([owner_id], map: "idx_owner_id")
+  @@index([start_time, end_time], map: "idx_time")
+  @@index([marker_type_id], map: "idx_type_id")
+  @@index([location(length: 32)], map: "sp_location")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tags {
+  id          BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  tag_name    String        @unique(map: "uk_tag_name") @db.VarChar(50)
+  creator_id  BigInt        @db.UnsignedBigInt
+  created_at  DateTime      @default(now()) @db.Timestamp(0)
+  marker_tags marker_tags[]
+  users       users         @relation(fields: [creator_id], references: [id], onUpdate: Restrict, map: "tags_ibfk_1")
+
+  @@index([creator_id], map: "creator_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model users {
+  id                                                  BigInt                 @id @default(autoincrement()) @db.UnsignedBigInt
+  username                                            String                 @unique(map: "uk_username") @db.VarChar(50)
+  password_hash                                       String                 @db.VarChar(255)
+  email                                               String?                @unique(map: "uk_email") @db.VarChar(100)
+  phone                                               String?                @unique(map: "uk_phone") @db.VarChar(20)
+  role                                                String                 @db.VarChar(255)
+  created_at                                          DateTime               @default(now()) @db.Timestamp(0)
+  updated_at                                          DateTime               @default(now()) @db.Timestamp(0)
+  attachments                                         attachments[]
+  friend_requests_friend_requests_requester_idTousers friend_requests[]      @relation("friend_requests_requester_idTousers")
+  friend_requests_friend_requests_recipient_idTousers friend_requests[]      @relation("friend_requests_recipient_idTousers")
+  friendships_friendships_user1_idTousers             friendships[]          @relation("friendships_user1_idTousers")
+  friendships_friendships_user2_idTousers             friendships[]          @relation("friendships_user2_idTousers")
+  marker_collaborators                                marker_collaborators[]
+  markers_markers_creator_idTousers                   markers[]              @relation("markers_creator_idTousers")
+  markers_markers_owner_idTousers                     markers[]              @relation("markers_owner_idTousers")
+  tags                                                tags[]
+}

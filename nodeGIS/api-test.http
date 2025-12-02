@@ -1,0 +1,580 @@
+### NodeGIS API 测试文件
+### 使用 VS Code 的 REST Client 插件或 IntelliJ IDEA 的 HTTP Client 运行
+
+@baseUrl = http://localhost:3001
+@token =
+@userId =
+@markerId =
+@markerTypeId =
+@friendId =
+@requestId =
+
+###############################################
+# 1. 认证测试
+###############################################
+
+### 1.1 用户注册
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser001",
+  "email": "testuser001@example.com",
+  "phone": "13800138001",
+  "password": "password123"
+}
+
+### 1.2 用户注册 - 第二个用户（用于好友功能测试）
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser002",
+  "email": "testuser002@example.com",
+  "phone": "13800138002",
+  "password": "password123"
+}
+
+### 1.3 用户注册 - 第三个用户
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser003",
+  "email": "testuser003@example.com",
+  "phone": "13800138003",
+  "password": "password123"
+}
+
+### 1.4 用户登录 (用户1)
+# @name login1
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identity": "testuser001",
+  "password": "password123"
+}
+
+### 1.5 用户登录 (用户2)
+# @name login2
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identity": "testuser002",
+  "password": "password123"
+}
+
+### 1.6 用户登录 - 使用邮箱
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identity": "testuser001@example.com",
+  "password": "password123"
+}
+
+### 1.7 用户登录 - 使用手机号
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identity": "13800138001",
+  "password": "password123"
+}
+
+### 1.8 用户登录 - 错误密码（应该返回401）
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identity": "testuser001",
+  "password": "wrongpassword"
+}
+
+### 1.9 用户注册 - 重复用户名（应该返回409）
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser001",
+  "email": "newemail@example.com",
+  "phone": "13800138999",
+  "password": "password123"
+}
+
+### 1.10 用户注册 - 缺少必填字段（应该返回400）
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser004",
+  "password": "password123"
+}
+
+###############################################
+# 2. 标记类型测试
+###############################################
+
+### 2.1 获取所有标记类型
+# 需要先登录获取 token，将上面登录返回的 token 复制到下面
+GET {{baseUrl}}/marker-types
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+
+### 2.2 未认证访问标记类型（应该返回401）
+GET {{baseUrl}}/marker-types
+
+###############################################
+# 3. 标记点测试
+###############################################
+
+### 3.1 创建标记点 - 公开标记
+# @name createMarker1
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": 116.404,
+  "latitude": 39.915,
+  "altitude": 100,
+  "time_start": "2024-01-01T08:00:00Z",
+  "time_end": "2024-01-01T18:00:00Z",
+  "title": "北京天安门广场",
+  "description": "这是一个公开的标记点，用于测试",
+  "typeId": "1",
+  "visibility": "public"
+}
+
+### 3.2 创建标记点 - 私有标记
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": 121.473,
+  "latitude": 31.230,
+  "altitude": 50,
+  "time_start": "2024-02-01T09:00:00Z",
+  "time_end": "2024-02-01T17:00:00Z",
+  "title": "上海东方明珠",
+  "description": "这是一个私有标记点",
+  "typeId": "1",
+  "visibility": "private"
+}
+
+### 3.3 创建标记点 - 好友可见
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": 113.264,
+  "latitude": 23.129,
+  "altitude": 80,
+  "time_start": "2024-03-15T10:00:00Z",
+  "title": "广州塔",
+  "description": "这是一个好友可见的标记点",
+  "typeId": "1",
+  "visibility": "friend"
+}
+
+### 3.4 创建标记点 - 缺少必填字段（应该返回400）
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": 116.404,
+  "latitude": 39.915
+}
+
+### 3.5 获取标记点列表 - 无过滤
+GET {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 3.6 获取标记点列表 - 按时间范围过滤
+GET {{baseUrl}}/markers?time_start=2024-01-01T00:00:00Z&time_end=2024-02-28T23:59:59Z
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 3.7 获取标记点列表 - 按高度过滤
+GET {{baseUrl}}/markers?min_height=50&max_height=150
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 3.8 获取标记点列表 - 按类型过滤
+GET {{baseUrl}}/markers?type=1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 3.9 获取标记点列表 - 关键词搜索
+GET {{baseUrl}}/markers?keyword=北京
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 3.10 获取标记点列表 - 组合过滤
+GET {{baseUrl}}/markers?time_start=2024-01-01T00:00:00Z&min_height=50&keyword=标记
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 3.11 获取单个标记点详情
+# 将创建标记点返回的 id 替换到这里
+GET {{baseUrl}}/markers/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 3.12 获取不存在的标记点（应该返回404）
+GET {{baseUrl}}/markers/999999
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 3.13 更新标记点
+# 将要更新的标记点 id 替换到这里
+PUT {{baseUrl}}/markers/6
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "title": "北京天安门广场（已更新）",
+  "description": "这是更新后的描述",
+  "altitude": 120,
+  "visibility": "public"
+}
+
+### 3.14 更新标记点 - 只更新部分字段
+PUT {{baseUrl}}/markers/6
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "description": "再次更新的描述"
+}
+
+### 3.15 删除标记点
+# 将要删除的标记点 id 替换到这里（建议先创建一个测试用的）
+DELETE {{baseUrl}}/markers/6
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 3.16 未认证访问标记点（应该返回401）
+GET {{baseUrl}}/markers
+
+###############################################
+# 4. 好友功能测试
+###############################################
+
+### 4.1 搜索用户 - 按用户名
+GET {{baseUrl}}/friends/search?query=test
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 4.2 搜索用户 - 按邮箱
+GET {{baseUrl}}/friends/search?query=testuser002@example.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 4.3 搜索用户 - 按手机号
+GET {{baseUrl}}/friends/search?query=13800138002
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 4.4 搜索用户 - 模糊搜索
+GET {{baseUrl}}/friends/search?query=test
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 4.5 发送好友请求
+# 将搜索到的用户 id 替换到这里
+POST {{baseUrl}}/friends/request
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "targetUserId": "7",
+  "message": "你好，我想加你为好友"
+}
+
+### 4.6 发送好友请求 - 给第三个用户
+POST {{baseUrl}}/friends/request
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "targetUserId": "3"
+}
+
+### 4.7 发送好友请求 - 重复请求（应该返回409）
+POST {{baseUrl}}/friends/request
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "targetUserId": "2"
+}
+
+### 4.8 发送好友请求 - 缺少目标用户ID（应该返回400）
+POST {{baseUrl}}/friends/request
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "message": "你好"
+}
+
+### 4.9 获取好友请求列表（使用用户2的token）
+GET {{baseUrl}}/friends/requests
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3IiwiaWF0IjoxNzY0NjU5NTk5LCJleHAiOjE3NjQ2NjMxOTl9.bkBuSZYFPgWhpQam2GfW9HkhJsxkyPCXroPEfx_H7Pk
+
+### 4.10 处理好友请求 - 接受
+# 使用用户2的token，将请求ID替换到这里
+POST {{baseUrl}}/friends/request/handle
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3IiwiaWF0IjoxNzY0NjU5NTk5LCJleHAiOjE3NjQ2NjMxOTl9.bkBuSZYFPgWhpQam2GfW9HkhJsxkyPCXroPEfx_H7Pk
+Content-Type: application/json
+
+{
+  "requestId": "8",
+  "accept": true
+}
+
+### 4.11 处理好友请求 - 拒绝
+# 使用用户3的token，拒绝用户1的请求
+POST {{baseUrl}}/friends/request/handle
+Authorization: Bearer USER3_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "requestId": "2",
+  "accept": false
+}
+
+### 4.12 获取好友列表
+GET {{baseUrl}}/friends
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 4.13 获取单个好友详情
+# 将好友的 id 替换到这里
+GET {{baseUrl}}/friends/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 4.14 获取不存在的好友（应该返回404）
+GET {{baseUrl}}/friends/999999
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 4.15 直接添加好友（简化版本）
+POST {{baseUrl}}/friends
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "targetUserId": "3"
+}
+
+### 4.16 添加好友 - 已存在的好友（应该返回403）
+POST {{baseUrl}}/friends
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "targetUserId": "2"
+}
+
+### 4.17 删除好友
+# 将要删除的好友 id 替换到这里
+DELETE {{baseUrl}}/friends/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+### 4.18 删除不存在的好友（应该返回404）
+DELETE {{baseUrl}}/friends/999999
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+###############################################
+# 5. 错误处理测试
+###############################################
+
+### 5.1 无效的 Token（应该返回401）
+GET {{baseUrl}}/markers
+Authorization: Bearer invalid_token_here
+
+### 5.2 缺少 Authorization Header（应该返回401）
+GET {{baseUrl}}/markers
+
+### 5.3 错误的 HTTP 方法（应该返回404）
+PATCH {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identity": "testuser001",
+  "password": "password123"
+}
+
+### 5.4 不存在的路由（应该返回404）
+GET {{baseUrl}}/nonexistent-route
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+
+###############################################
+# 6. 边界条件测试
+###############################################
+
+### 6.1 创建标记点 - 极端坐标值
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": -180,
+  "latitude": -90,
+  "altitude": 0,
+  "time_start": "2024-01-01T00:00:00Z",
+  "title": "极端坐标测试",
+  "typeId": "1",
+  "visibility": "public"
+}
+
+### 6.2 创建标记点 - 未来时间
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": 116.404,
+  "latitude": 39.915,
+  "altitude": 100,
+  "time_start": "2025-12-31T23:59:59Z",
+  "title": "未来时间标记",
+  "typeId": "1",
+  "visibility": "public"
+}
+
+### 6.3 创建标记点 - 负海拔
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": 116.404,
+  "latitude": 39.915,
+  "altitude": -100,
+  "time_start": "2024-01-01T00:00:00Z",
+  "title": "海平面以下标记",
+  "typeId": "1",
+  "visibility": "public"
+}
+
+### 6.4 创建标记点 - 超长描述
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": 116.404,
+  "latitude": 39.915,
+  "time_start": "2024-01-01T00:00:00Z",
+  "title": "超长描述测试",
+  "description": "这是一个非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常非常长的描述，用于测试系统对长文本的处理能力。Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+  "typeId": "1",
+  "visibility": "public"
+}
+
+### 6.5 用户注册 - 特殊字符用户名
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "test_user-123",
+  "email": "special@example.com",
+  "phone": "13800138888",
+  "password": "password123"
+}
+
+###############################################
+# 7. 性能测试准备
+###############################################
+
+### 7.1 批量创建标记点 - 第1个
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": 116.40,
+  "latitude": 39.91,
+  "altitude": 100,
+  "time_start": "2024-01-01T08:00:00Z",
+  "title": "批量测试标记点1",
+  "typeId": "1",
+  "visibility": "public"
+}
+
+### 7.2 批量创建标记点 - 第2个
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": 116.41,
+  "latitude": 39.92,
+  "altitude": 110,
+  "time_start": "2024-01-02T08:00:00Z",
+  "title": "批量测试标记点2",
+  "typeId": "1",
+  "visibility": "public"
+}
+
+### 7.3 批量创建标记点 - 第3个
+POST {{baseUrl}}/markers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+Content-Type: application/json
+
+{
+  "longitude": 116.42,
+  "latitude": 39.93,
+  "altitude": 120,
+  "time_start": "2024-01-03T08:00:00Z",
+  "title": "批量测试标记点3",
+  "typeId": "1",
+  "visibility": "public"
+}
+
+###############################################
+# 8. 集成测试场景
+###############################################
+
+### 场景1: 完整的用户生命周期
+# 1. 注册用户
+# 2. 登录获取token
+# 3. 创建标记点
+# 4. 查询自己的标记点
+# 5. 更新标记点
+# 6. 删除标记点
+
+### 场景2: 好友互动流程
+# 1. 用户A登录
+# 2. 用户B登录
+# 3. 用户A搜索用户B
+# 4. 用户A发送好友请求给用户B
+# 5. 用户B查看好友请求
+# 6. 用户B接受好友请求
+# 7. 用户A和用户B都能在好友列表中看到对方
+# 8. 用户A删除好友
+
+### 场景3: 标记点可见性测试
+# 1. 用户A创建私有标记点
+# 2. 用户A创建公开标记点
+# 3. 用户A创建好友可见标记点
+# 4. 用户B查询标记点（应该只能看到公开的）
+# 5. 用户A和B成为好友
+# 6. 用户B再次查询（应该能看到公开的和好友可见的）
+
+###############################################
+# 快速测试说明
+###############################################
+
+# 1. 首先运行认证测试部分（1.1-1.7），获取 token
+# 2. 将获取的 token 替换所有 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaWF0IjoxNzY0NjU5MjM4LCJleHAiOjE3NjQ2NjI4Mzh9.EEl-S4-GksHweVDyu0UVrqn2kGiBMhvw0xwy2ztF23Q
+# 3. 按顺序执行各个模块的测试
+# 4. 注意观察响应状态码和返回数据格式
+# 5. 对于需要 ID 的请求，先执行创建操作获取 ID 后再测试
+
+###############################################
+# 预期结果检查清单
+###############################################
+
+# ✓ 所有成功的请求返回正确的状态码（200/201/204）
+# ✓ 所有错误请求返回正确的错误状态码（400/401/403/404/409）
+# ✓ 错误响应包含 code 和 message 字段
+# ✓ 成功响应的数据结构符合 API 规范
+# ✓ JWT token 在所有受保护的路由中正常工作
+# ✓ 数据过滤和搜索功能正常工作
+# ✓ 好友系统的请求-接受流程完整
+

@@ -1,0 +1,1920 @@
+openapi: 3.1.0
+info:
+  title: 默认模块
+  description: ''
+  version: 1.0.0
+tags:
+  - name: 认证
+  - name: 标记点 (Markers)
+  - name: 标记类型 (Marker Types)
+  - name: 好友 (Friends)
+paths:
+  /auth/register:
+    post:
+      summary: 用户注册
+      deprecated: false
+      description: ''
+      tags:
+        - 认证
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example: ''
+      responses:
+        '200':
+          x-apifox-name: 注册成功
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    examples:
+                      - uuid-user-123
+                  message:
+                    type: string
+                    examples:
+                      - 注册成功
+                x-apifox-orders:
+                  - userId
+                  - message
+                x-apifox-ignore-properties: []
+          headers: {}
+          x-apifox-ordering: 0
+        '400':
+          x-apifox-name: 无效请求（例如：参数验证失败）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: VALIDATION_ERROR
+                message: 输入参数无效
+                details:
+                  - field: email
+                    issue: 邮箱格式不正确
+          headers: {}
+          x-apifox-ordering: 1
+        '409':
+          x-apifox-name: 资源冲突（例如：邮箱或用户名已被注册）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: USER_ALREADY_EXISTS
+                message: 该邮箱已被注册
+          headers: {}
+          x-apifox-ordering: 2
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 3
+      security: []
+      x-apifox-folder: 认证
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-372255083-run
+  /auth/login:
+    post:
+      summary: 用户登录
+      deprecated: false
+      description: ''
+      tags:
+        - 认证
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              identity: '100'
+              password: Excepteur enim sed
+      responses:
+        '200':
+          x-apifox-name: 登录成功
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+          headers: {}
+          x-apifox-ordering: 0
+        '400':
+          x-apifox-name: 无效请求（例如：缺少 identity 或 password）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: VALIDATION_ERROR
+                message: 缺少 password 字段
+          headers: {}
+          x-apifox-ordering: 1
+        '401':
+          x-apifox-name: 认证失败（例如：用户名或密码错误）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_CREDENTIALS
+                message: 用户名或密码错误
+          headers: {}
+          x-apifox-ordering: 2
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 3
+      security: []
+      x-apifox-folder: 认证
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-372255084-run
+  /markers:
+    get:
+      summary: 获取标记点列表
+      deprecated: false
+      description: 按时间、高度、类型、关键词、空间范围等条件过滤标记。
+      tags:
+        - 标记点 (Markers)
+      parameters:
+        - name: time_start
+          in: query
+          description: ISO 8601 格式，筛选时间范围开始点。
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: time_end
+          in: query
+          description: ISO 8601 格式，筛选时间范围结束点。
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: min_height
+          in: query
+          description: 最小高度（米）
+          required: false
+          schema:
+            type: number
+            format: float
+        - name: max_height
+          in: query
+          description: 最大高度（米）
+          required: false
+          schema:
+            type: number
+            format: float
+        - name: type
+          in: query
+          description: 标记类型 ID
+          required: false
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          description: 关键词搜索（匹配标题、描述）
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          x-apifox-name: 成功的标记列表
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Marker'
+                    minItems: 50
+                    uniqueItems: true
+                    maxItems: 100
+                x-apifox-orders:
+                  - total
+                  - data
+                x-apifox-ignore-properties: []
+          headers: {}
+          x-apifox-ordering: 0
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 1
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 2
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 标记点
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-372255085-run
+    post:
+      summary: 创建一个新的 4D 标记点
+      deprecated: false
+      description: ''
+      tags:
+        - 标记点 (Markers)
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkerCreateRequest'
+            example: ''
+      responses:
+        '201':
+          x-apifox-name: 标记创建成功
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Marker'
+          headers: {}
+          x-apifox-ordering: 0
+        '400':
+          x-apifox-name: 无效请求（例如：请求体验证失败）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: VALIDATION_ERROR
+                message: 标题 不能为空
+                details:
+                  - field: title
+                    issue: is required
+          headers: {}
+          x-apifox-ordering: 1
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 2
+        '403':
+          x-apifox-name: 禁止访问（例如：用户无权创建标记点）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: FORBIDDEN
+                message: 您的账户无权创建标记点
+          headers: {}
+          x-apifox-ordering: 3
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 4
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 标记点
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-372255086-run
+  /markers/{markerId}:
+    get:
+      summary: 获取单个标记点详情
+      deprecated: false
+      description: ''
+      tags:
+        - 标记点 (Markers)
+      parameters:
+        - name: markerId
+          in: path
+          description: ''
+          required: true
+          example: ''
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          x-apifox-name: 标记点详情
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Marker'
+          headers: {}
+          x-apifox-ordering: 0
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 1
+        '403':
+          x-apifox-name: 禁止访问（例如：无权查看该私有标记点）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: FORBIDDEN
+                message: 您无权查看此标记点
+          headers: {}
+          x-apifox-ordering: 2
+        '404':
+          x-apifox-name: 未找到标记点
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: NOT_FOUND
+                message: 未找到 ID 为 [markerId] 的标记点
+          headers: {}
+          x-apifox-ordering: 3
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 4
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 标记点
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-372255087-run
+    put:
+      summary: 更新一个标记点
+      deprecated: false
+      description: ''
+      tags:
+        - 标记点 (Markers)
+      parameters:
+        - name: markerId
+          in: path
+          description: ''
+          required: true
+          example: ''
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkerUpdateRequest'
+            example: ''
+      responses:
+        '200':
+          x-apifox-name: 更新成功
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Marker'
+          headers: {}
+          x-apifox-ordering: 0
+        '400':
+          x-apifox-name: 无效请求（例如：请求体验证失败）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: VALIDATION_ERROR
+                message: visibility 字段值无效
+          headers: {}
+          x-apifox-ordering: 1
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 2
+        '403':
+          x-apifox-name: 禁止访问（例如：无权修改他人的标记点）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: FORBIDDEN
+                message: 您没有权限修改此标记点
+          headers: {}
+          x-apifox-ordering: 3
+        '404':
+          x-apifox-name: 未找到标记点
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: NOT_FOUND
+                message: 未找到 ID 为 [markerId] 的标记点
+          headers: {}
+          x-apifox-ordering: 4
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 5
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 标记点
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-372255088-run
+    delete:
+      summary: 删除一个标记点
+      deprecated: false
+      description: ''
+      tags:
+        - 标记点 (Markers)
+      parameters:
+        - name: markerId
+          in: path
+          description: ''
+          required: true
+          example: ''
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          x-apifox-name: 删除成功，无返回内容
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+                x-apifox-orders: []
+                x-apifox-ignore-properties: []
+          headers: {}
+          x-apifox-ordering: 0
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 1
+        '403':
+          x-apifox-name: 禁止访问（例如：无权删除他人的标记点）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: FORBIDDEN
+                message: 您没有权限删除此标记点
+          headers: {}
+          x-apifox-ordering: 2
+        '404':
+          x-apifox-name: 未找到标记点
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: NOT_FOUND
+                message: 未找到 ID 为 [markerId] 的标记点
+          headers: {}
+          x-apifox-ordering: 3
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 4
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 标记点
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-372255089-run
+  /marker-types:
+    get:
+      summary: 获取所有标记类型模板
+      deprecated: false
+      description: ''
+      tags:
+        - 标记类型 (Marker Types)
+      parameters: []
+      responses:
+        '200':
+          x-apifox-name: 标记类型列表
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MarkerType'
+                uniqueItems: true
+                minItems: 7
+                maxItems: 10
+          headers: {}
+          x-apifox-ordering: 0
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 1
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 2
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 标记类型
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-372255091-run
+  /friends:
+    get:
+      summary: 获取好友列表
+      deprecated: false
+      description: ''
+      tags:
+        - 好友 (Friends)
+      parameters: []
+      responses:
+        '200':
+          x-apifox-name: 成功的好友列表
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Friend'
+                uniqueItems: true
+                minItems: 10
+                maxItems: 20
+          headers: {}
+          x-apifox-ordering: 0
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 1
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 2
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 好友
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-380410910-run
+    post:
+      summary: 添加好友
+      deprecated: false
+      description: ''
+      tags:
+        - 好友 (Friends)
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FriendRequest'
+      responses:
+        '201':
+          x-apifox-name: 好友添加成功
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Friend'
+          headers: {}
+          x-apifox-ordering: 0
+        '400':
+          x-apifox-name: 无效请求（例如：请求体验证失败）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: VALIDATION_ERROR
+                message: 用户 ID 不能为空
+                details:
+                  - field: userId
+                    issue: is required
+          headers: {}
+          x-apifox-ordering: 1
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 2
+        '403':
+          x-apifox-name: 禁止访问（例如：用户无权添加好友）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: FORBIDDEN
+                message: 您的账户无权添加好友
+          headers: {}
+          x-apifox-ordering: 3
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 4
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 好友
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-380410911-run
+  /friends/{friendId}:
+    get:
+      summary: 获取单个好友详情
+      deprecated: false
+      description: ''
+      tags:
+        - 好友 (Friends)
+      parameters:
+        - name: friendId
+          in: path
+          description: ''
+          required: true
+          example: ''
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          x-apifox-name: 好友详情
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Friend'
+          headers: {}
+          x-apifox-ordering: 0
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 1
+        '403':
+          x-apifox-name: 禁止访问（例如：无权查看该私有好友）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: FORBIDDEN
+                message: 您无权查看此好友
+          headers: {}
+          x-apifox-ordering: 2
+        '404':
+          x-apifox-name: 未找到好友
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: NOT_FOUND
+                message: 未找到 ID 为 [friendId] 的好友
+          headers: {}
+          x-apifox-ordering: 3
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 4
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 好友
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-380410912-run
+    delete:
+      summary: 删除好友
+      deprecated: false
+      description: ''
+      tags:
+        - 好友 (Friends)
+      parameters:
+        - name: friendId
+          in: path
+          description: ''
+          required: true
+          example: ''
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          x-apifox-name: 删除成功，无返回内容
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+                x-apifox-orders: []
+                x-apifox-ignore-properties: []
+          headers: {}
+          x-apifox-ordering: 0
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 1
+        '403':
+          x-apifox-name: 禁止访问（例如：无权删除他人的好友）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: FORBIDDEN
+                message: 您没有权限删除此好友
+          headers: {}
+          x-apifox-ordering: 2
+        '404':
+          x-apifox-name: 未找到好友
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: NOT_FOUND
+                message: 未找到 ID 为 [friendId] 的好友
+          headers: {}
+          x-apifox-ordering: 3
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 4
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 好友
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-380410913-run
+  /friends/requests:
+    get:
+      summary: 获取好友请求列表
+      deprecated: false
+      description: 获取当前用户收到的所有好友请求
+      tags:
+        - 好友 (Friends)
+      parameters: []
+      responses:
+        '200':
+          x-apifox-name: 成功的好友请求列表
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FriendRequestItem'
+                uniqueItems: true
+          headers: {}
+          x-apifox-ordering: 0
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 1
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 2
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 好友
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-380410914-run
+  /friends/request:
+    post:
+      summary: 发送好友请求
+      deprecated: false
+      description: 向指定用户发送好友请求
+      tags:
+        - 好友 (Friends)
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendFriendRequestRequest'
+            examples: {}
+      responses:
+        '200':
+          x-apifox-name: 成功
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    examples:
+                      - 好友请求已发送
+                x-apifox-orders:
+                  - message
+                x-apifox-ignore-properties: []
+          headers: {}
+          x-apifox-ordering: 0
+        '400':
+          x-apifox-name: 无效请求
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: VALIDATION_ERROR
+                message: 目标用户ID不能为空
+          headers: {}
+          x-apifox-ordering: 1
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 2
+        '409':
+          x-apifox-name: 资源冲突（例如：已经是好友或请求已存在）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: ALREADY_FRIENDS
+                message: 你们已经是好友了
+          headers: {}
+          x-apifox-ordering: 3
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 4
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 好友
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-380410915-run
+  /friends/request/handle:
+    post:
+      summary: 处理好友请求
+      deprecated: false
+      description: 接受或拒绝好友请求
+      tags:
+        - 好友 (Friends)
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HandleFriendRequestRequest'
+      responses:
+        '200':
+          x-apifox-name: 好友请求处理成功
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    examples:
+                      - 好友请求已处理
+                x-apifox-orders:
+                  - message
+                x-apifox-ignore-properties: []
+          headers: {}
+          x-apifox-ordering: 0
+        '400':
+          x-apifox-name: 无效请求
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: VALIDATION_ERROR
+                message: 请求ID不能为空
+          headers: {}
+          x-apifox-ordering: 1
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 2
+        '404':
+          x-apifox-name: 未找到好友请求
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: NOT_FOUND
+                message: 未找到该好友请求
+          headers: {}
+          x-apifox-ordering: 3
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 4
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 好友
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-380410916-run
+  /friends/search:
+    get:
+      summary: 搜索用户
+      deprecated: false
+      description: 根据用户名、邮箱或手机号搜索用户
+      tags:
+        - 好友 (Friends)
+      parameters:
+        - name: query
+          in: query
+          description: 搜索关键词（用户名、邮箱或手机号）
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          x-apifox-name: 成功的搜索结果
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchResult'
+                uniqueItems: true
+          headers: {}
+          x-apifox-ordering: 0
+        '401':
+          x-apifox-name: 未认证（Token 无效或缺失）
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: UNAUTHENTICATED
+                message: 需要提供有效的认证Token
+          headers: {}
+          x-apifox-ordering: 1
+        '500':
+          x-apifox-name: 服务器内部错误
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_ERROR
+                message: 服务器发生未知错误
+          headers: {}
+          x-apifox-ordering: 2
+      security:
+        - jwt: []
+          x-apifox:
+            required: true
+            schemeGroups:
+              - id: 2E3vUtLwdMRJwtG6NLo0V
+                schemeIds:
+                  - jwt
+            use:
+              id: 2E3vUtLwdMRJwtG6NLo0V
+              configs:
+                jwt:
+                  authConfigs:
+                    x-apifox:
+                      token: >-
+                        eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
+      x-apifox-folder: 好友
+      x-apifox-status: released
+      x-run-in-apifox: https://app.apifox.com/web/project/7359528/apis/api-380410917-run
+webhooks: {}
+components:
+  schemas:
+    Marker:
+      type: object
+      description: 4D 标记点核心数据模型
+      properties:
+        id:
+          type: string
+        longitude:
+          type: number
+          format: double
+          description: 经度
+        latitude:
+          type: number
+          format: double
+          description: 纬度
+        altitude:
+          type: number
+          description: 高度
+          format: double
+        time_start:
+          type: string
+          format: date-time
+          description: 开始时间
+        time_end:
+          type: string
+          format: date-time
+          description: 结束时间
+        title:
+          type: string
+          description: 标记标题
+        description:
+          type: string
+          description: 标记描述
+        type:
+          $ref: '#/components/schemas/MarkerType'
+          description: 标记类型
+        visibility:
+          type: string
+          description: 标记可见性
+          enum:
+            - private
+            - public
+            - friend
+          x-apifox:
+            enumDescriptions:
+              private: ''
+              public: ''
+              friend: ''
+        createdBy:
+          type: object
+          properties:
+            userId:
+              type: string
+            username:
+              type: string
+          x-apifox-orders:
+            - userId
+            - username
+          description: 创建者
+          x-apifox-ignore-properties: []
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新时间
+      x-apifox-orders:
+        - id
+        - longitude
+        - latitude
+        - altitude
+        - time_start
+        - time_end
+        - title
+        - description
+        - type
+        - visibility
+        - createdBy
+        - createdAt
+        - updatedAt
+      required:
+        - id
+        - longitude
+        - latitude
+        - time_start
+        - title
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    MarkerType:
+      type: object
+      description: 标记类型模板
+      properties:
+        typeId:
+          type: string
+        name:
+          type: string
+        icon:
+          type: string
+          description: 图标名
+        color:
+          type: string
+          format: hex-color
+      x-apifox-orders:
+        - typeId
+        - name
+        - icon
+        - color
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - phone
+        - password
+      properties:
+        username:
+          type: string
+          description: 用户名
+        email:
+          type: string
+          format: email
+          description: 邮箱
+        phone:
+          type: string
+          description: 手机号
+        password:
+          type: string
+          format: password
+      x-apifox-orders:
+        - username
+        - email
+        - phone
+        - password
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    LoginRequest:
+      type: object
+      properties:
+        identity:
+          type: string
+          description: 手机号/用户名/邮箱
+        password:
+          type: string
+          format: password
+      x-apifox-orders:
+        - identity
+        - password
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT Token
+        expiresIn:
+          type: integer
+          description: 过期时间
+        user:
+          type: object
+          properties:
+            userId:
+              type: string
+              description: 用户ID
+            username:
+              type: string
+              description: 用户名
+          x-apifox-orders:
+            - userId
+            - username
+          x-apifox-ignore-properties: []
+      x-apifox-orders:
+        - token
+        - expiresIn
+        - user
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    MarkerUpdateRequest:
+      type: object
+      properties:
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
+        altitude:
+          type: number
+          format: double
+        time_start:
+          type: string
+          format: date-time
+          description: 起始时间
+        time_end:
+          type: string
+          format: date-time
+          description: 结束时间
+        title:
+          type: string
+          description: 标题
+        description:
+          type: string
+          description: 描述
+        typeId:
+          type: string
+          description: 标记类型的 ID
+        visibility:
+          type: string
+          enum:
+            - private
+            - public
+            - team
+          default: private
+          description: 标记的可见性
+      x-apifox-orders:
+        - longitude
+        - latitude
+        - altitude
+        - time_start
+        - time_end
+        - title
+        - description
+        - typeId
+        - visibility
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    MarkerCreateRequest:
+      type: object
+      required:
+        - longitude
+        - latitude
+        - time_start
+        - title
+        - typeId
+      properties:
+        longitude:
+          type: number
+          format: double
+        latitude:
+          type: number
+          format: double
+        altitude:
+          type: number
+          format: double
+        time_start:
+          type: string
+          format: date-time
+          description: 起始时间
+        time_end:
+          type: string
+          format: date-time
+          description: 结束时间
+        title:
+          type: string
+          description: 标题
+        description:
+          type: string
+          description: 描述
+        typeId:
+          type: string
+          description: 标记类型的 ID
+        visibility:
+          type: string
+          enum:
+            - private
+            - public
+            - team
+          default: private
+          description: 标记的可见性
+      x-apifox-orders:
+        - longitude
+        - latitude
+        - altitude
+        - time_start
+        - time_end
+        - title
+        - description
+        - typeId
+        - visibility
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 业务错误码，便于前端处理
+          examples:
+            - VALIDATION_ERROR
+        message:
+          type: string
+          description: 人类可读的错误信息
+          examples:
+            - 输入参数无效
+        details:
+          type: array
+          description: （可选）详细的验证错误列表
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                examples:
+                  - email
+              issue:
+                type: string
+                examples:
+                  - 邮箱格式不正确
+            x-apifox-orders:
+              - field
+              - issue
+            x-apifox-ignore-properties: []
+      required:
+        - code
+        - message
+      x-apifox-orders:
+        - code
+        - message
+        - details
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    Friend:
+      type: object
+      description: 好友信息
+      properties:
+        id:
+          type: string
+          description: 好友ID
+        name:
+          type: string
+          description: 好友姓名
+        email:
+          type: string
+          format: email
+          description: 好友邮箱
+        phone:
+          type: string
+          description: 好友手机号
+        mutualFriends:
+          type: integer
+          description: 共同好友数量
+        createdAt:
+          type: string
+          format: date-time
+          description: 成为好友的时间
+      required:
+        - id
+        - name
+        - email
+        - phone
+      x-apifox-orders:
+        - id
+        - name
+        - email
+        - phone
+        - mutualFriends
+        - createdAt
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    FriendRequest:
+      type: object
+      description: 好友请求（用于发送请求时）
+      properties:
+        targetUserId:
+          type: string
+          description: 目标用户ID
+        message:
+          type: string
+          description: 附带消息（可选）
+      required:
+        - targetUserId
+      x-apifox-orders:
+        - targetUserId
+        - message
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    FriendRequestItem:
+      type: object
+      description: 好友请求项（接收到的请求）
+      properties:
+        id:
+          type: string
+          description: 请求ID
+        senderId:
+          type: string
+          description: 发送者用户ID
+        name:
+          type: string
+          description: 发送者姓名
+        mutualFriends:
+          type: integer
+          description: 共同好友数量
+        requestDate:
+          type: string
+          format: date-time
+          description: 请求发送时间
+        message:
+          type: string
+          description: 附带消息
+      required:
+        - id
+        - senderId
+        - name
+        - mutualFriends
+        - requestDate
+      x-apifox-orders:
+        - id
+        - senderId
+        - name
+        - mutualFriends
+        - requestDate
+        - message
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    SendFriendRequestRequest:
+      type: object
+      description: 发送好友请求的请求体
+      properties:
+        targetUserId:
+          type: string
+          description: 目标用户ID
+        message:
+          type: string
+          description: 附带消息（可选）
+      required:
+        - targetUserId
+      x-apifox-orders:
+        - targetUserId
+        - message
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    HandleFriendRequestRequest:
+      type: object
+      description: 处理好友请求的请求体
+      properties:
+        requestId:
+          type: string
+          description: 好友请求ID
+        accept:
+          type: boolean
+          description: true为接受，false为拒绝
+      required:
+        - requestId
+        - accept
+      x-apifox-orders:
+        - requestId
+        - accept
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+    SearchResult:
+      type: object
+      description: 用户搜索结果
+      properties:
+        id:
+          type: string
+          description: 用户ID
+        name:
+          type: string
+          description: 用户姓名
+        mutualFriends:
+          type: integer
+          description: 共同好友数量
+        isFriend:
+          type: boolean
+          description: 是否已经是好友
+        isPending:
+          type: boolean
+          description: 是否有待处理的好友请求
+      required:
+        - id
+        - name
+        - mutualFriends
+        - isFriend
+        - isPending
+      x-apifox-orders:
+        - id
+        - name
+        - mutualFriends
+        - isFriend
+        - isPending
+      x-apifox-folder: ''
+      x-apifox-ignore-properties: []
+  responses: {}
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-apifox:
+        addTokenTo: header
+        headerPrefix: Bearer
+servers: []
+security:
+  - jwt: []
+    x-apifox:
+      required: true
+      schemeGroups:
+        - id: 2E3vUtLwdMRJwtG6NLo0V
+          schemeIds:
+            - jwt
+      use:
+        id: 2E3vUtLwdMRJwtG6NLo0V
+        configs:
+          jwt:
+            authConfigs:
+              x-apifox:
+                token: >-
+                  eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzY0NTkyMjE1LCJleHAiOjE3NjQ1OTU4MTV9.mwyJQo0q60DRrDS671GLziIZD2QEbVdpBPzmx4vdrxw
