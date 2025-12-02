@@ -97,6 +97,7 @@ export default function App() {
     // 处理登录成功
     const handleLogin = () => {
         setIsAuthenticated(true);
+        queryClient.invalidateQueries({ queryKey: ['markers'] });
     };
 
     // 处理登出
@@ -143,6 +144,7 @@ export default function App() {
     } = useQuery<Marker[], Error>({
         queryKey: ['markers'],
         queryFn: fetchMarkers,
+        enabled: isAuthenticated,
     });
 
     // 创建一个包含分享标记的标记列表（用于显示）
