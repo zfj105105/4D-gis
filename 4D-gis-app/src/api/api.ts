@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = 'http://10.63.79.250:4523/m1/7359528-7090421-default';
+const baseURL = 'https://gis.sayaaaaz.xyz';
 
 const apiClient = axios.create({
     baseURL: baseURL,
